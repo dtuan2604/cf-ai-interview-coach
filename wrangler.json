@@ -1,0 +1,39 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cf-ai-interview-coach-api",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-03-23",
+  "vars": {
+    "APP_ENV": "local",
+    "AI_INTERVIEW_MODEL": "REPLACE_WITH_WORKERS_AI_CHAT_MODEL",
+    "AI_EVALUATION_MODEL": "REPLACE_WITH_WORKERS_AI_EVALUATION_MODEL",
+    "AI_REPORT_MODEL": "REPLACE_WITH_WORKERS_AI_REPORT_MODEL",
+    "AI_TRANSCRIPTION_MODEL": "REPLACE_WITH_WORKERS_AI_STT_MODEL",
+    "SESSION_SUMMARY_MAX_TOKENS": "1200",
+    "REPORT_MAX_TOKENS": "2200"
+  },
+  "ai": {
+    "binding": "AI"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "cf-ai-interview-coach",
+      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "INTERVIEW_SESSIONS",
+        "class_name": "InterviewSessionDurableObject"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["InterviewSessionDurableObject"]
+    }
+  ]
+}

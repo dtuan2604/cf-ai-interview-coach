@@ -1,0 +1,7 @@
+APP_ENV=local
+AI_INTERVIEW_MODEL=@cf/meta/llama-3.1-8b-instruct
+AI_EVALUATION_MODEL=@cf/meta/llama-3.1-8b-instruct
+AI_REPORT_MODEL=@cf/meta/llama-3.1-8b-instruct
+AI_TRANSCRIPTION_MODEL=@cf/openai/whisper
+SESSION_SUMMARY_MAX_TOKENS=1200
+REPORT_MAX_TOKENS=2200
