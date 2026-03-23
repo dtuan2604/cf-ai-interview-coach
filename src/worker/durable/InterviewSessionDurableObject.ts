@@ -1,9 +1,149 @@
-type DurableObjectStateLike = object
+import {
+  applyMockAnswer,
+  completeMockSession,
+  createMockSession,
+} from '../../shared/mockSession'
+import type {
+  EndSessionResponse,
+  GetSessionResponse,
+  InterviewSessionState,
+  StartSessionRequest,
+  StartSessionResponse,
+  SubmitAnswerRequest,
+  SubmitAnswerResponse,
+} from '../../shared/types'
+import { json } from '../routes/json'
+
+type DurableObjectStorageLike = {
+  get<T>(key: string): Promise<T | undefined>
+  put<T>(key: string, value: T): Promise<void>
+}
+
+type DurableObjectStateLike = {
+  storage: DurableObjectStorageLike
+  blockConcurrencyWhile<T>(callback: () => Promise<T>): Promise<T>
+}
+
+type StartPayload = StartSessionRequest & { sessionId: string }
 
 export class InterviewSessionDurableObject {
   readonly state: DurableObjectStateLike
+  private readonly initialized: Promise<void>
+  private session: InterviewSessionState | null = null
 
   constructor(state: DurableObjectStateLike) {
     this.state = state
+    this.initialized = this.state.blockConcurrencyWhile(async () => {
+      this.session = (await this.state.storage.get<InterviewSessionState>('session')) ?? null
+    })
+  }
+
+  async fetch(request: Request): Promise<Response> {
+    await this.initialized
+
+    const url = new URL(request.url)
+    if (request.method === 'GET' && url.pathname === '/internal/session') {
+      return this.handleGetSession()
+    }
+
+    if (request.method === 'POST' && url.pathname === '/internal/start') {
+      return this.handleStart(request)
+    }
+
+    if (request.method === 'POST' && url.pathname === '/internal/answer') {
+      return this.handleAnswer(request)
+    }
+
+    if (request.method === 'POST' && url.pathname === '/internal/end') {
+      return this.handleEnd()
+    }
+
+    return json(
+      {
+        ok: false,
+        error: 'Durable Object route not found.',
+      },
+      { status: 404 },
+    )
+  }
+
+  private async persistSession(session: InterviewSessionState) {
+    this.session = session
+    await this.state.storage.put('session', session)
+  }
+
+  private handleGetSession() {
+    if (!this.session) {
+      return json(
+        {
+          ok: false,
+          error: 'Session not found.',
+        },
+        { status: 404 },
+      )
+    }
+
+    const response: GetSessionResponse = {
+      session: this.session,
+      transport: 'worker',
+    }
+
+    return json(response)
+  }
+
+  private async handleStart(request: Request) {
+    const payload = (await request.json()) as StartPayload
+    const session = createMockSession(payload, payload.sessionId)
+    await this.persistSession(session)
+
+    const response: StartSessionResponse = {
+      session,
+      transport: 'worker',
+    }
+
+    return json(response)
+  }
+
+  private async handleAnswer(request: Request) {
+    if (!this.session) {
+      return json(
+        {
+          ok: false,
+          error: 'Session not found.',
+        },
+        { status: 404 },
+      )
+    }
+
+    const payload = (await request.json()) as SubmitAnswerRequest
+    const session = applyMockAnswer(this.session, payload.answer)
+    await this.persistSession(session)
+
+    const response: SubmitAnswerResponse = {
+      session,
+      transport: 'worker',
+    }
+
+    return json(response)
+  }
+
+  private async handleEnd() {
+    if (!this.session) {
+      return json(
+        {
+          ok: false,
+          error: 'Session not found.',
+        },
+        { status: 404 },
+      )
+    }
+
+    const response: EndSessionResponse = {
+      ...completeMockSession(this.session),
+      transport: 'worker',
+    }
+
+    await this.persistSession(response.session)
+    return json(response)
   }
 }

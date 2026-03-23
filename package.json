@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:worker": "wrangler dev",
+    "db:migrate:local": "wrangler d1 execute interview-coach-db --local --file migrations/0001_initial.sql",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

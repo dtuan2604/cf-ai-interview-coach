@@ -1,6 +1,7 @@
 import type {
   EvaluationSnapshot,
   HistorySessionSummary,
+  InterviewReport,
   InterviewSessionState,
   InterviewSetupInput,
   TranscriptTurn,
@@ -66,7 +67,7 @@ function buildTurn(
   }
 }
 
-function buildHistoryEntry(session: InterviewSessionState): HistorySessionSummary {
+export function buildMockHistoryEntry(session: InterviewSessionState): HistorySessionSummary {
   return {
     id: session.id,
     role: session.role,
@@ -79,6 +80,36 @@ function buildHistoryEntry(session: InterviewSessionState): HistorySessionSummar
     summary:
       session.latestEvaluation?.summary ??
       'Mock session ended before the real Worker evaluation pipeline was connected.',
+  }
+}
+
+export function buildMockReport(session: InterviewSessionState): InterviewReport {
+  const createdAt = new Date().toISOString()
+  const strengths = session.latestEvaluation?.strengths ?? ['Clear communication']
+  const growthAreas =
+    session.latestEvaluation?.improvements ?? ['Add sharper examples and more measurable impact']
+
+  return {
+    sessionId: session.id,
+    role: session.role,
+    interviewType: session.interviewType,
+    overallScore: session.latestEvaluation?.score ?? 7,
+    summary:
+      session.latestEvaluation?.summary ??
+      'Solid baseline. Strongest next step is turning general answers into sharper interview stories.',
+    readinessAssessment:
+      session.latestEvaluation?.score && session.latestEvaluation.score >= 8
+        ? 'Strong baseline with room to sharpen impact framing.'
+        : 'Developing baseline that needs more specificity and structure.',
+    strengths,
+    growthAreas,
+    nextSteps: [
+      'Practice answers with explicit structure.',
+      'Add measurable outcomes to examples.',
+      'Prepare one follow-up detail for each core story.',
+    ],
+    createdAt,
+    updatedAt: createdAt,
   }
 }
 
@@ -147,6 +178,6 @@ export function completeMockSession(session: InterviewSessionState) {
 
   return {
     session: completedSession,
-    historyEntry: buildHistoryEntry(completedSession),
+    historyEntry: buildMockHistoryEntry(completedSession),
   }
 }

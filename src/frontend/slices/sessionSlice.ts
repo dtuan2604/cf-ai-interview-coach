@@ -7,6 +7,7 @@ import type {
   ApiTransport,
   EndSessionRequest,
   EndSessionResponse,
+  GetSessionResponse,
   InterviewSessionState,
   StartSessionRequest,
   StartSessionResponse,
@@ -21,6 +22,7 @@ type RequestState = 'idle' | 'loading' | 'failed'
 type SessionState = {
   current: InterviewSessionState | null
   transport: ApiTransport
+  loadStatus: RequestState
   startStatus: RequestState
   answerStatus: RequestState
   endStatus: RequestState
@@ -30,6 +32,7 @@ type SessionState = {
 const initialState: SessionState = {
   current: null,
   transport: appConfig.apiTransport,
+  loadStatus: 'idle',
   startStatus: 'idle',
   answerStatus: 'idle',
   endStatus: 'idle',
@@ -39,6 +42,18 @@ const initialState: SessionState = {
 function toErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Unexpected session error.'
 }
+
+export const loadInterviewSession = createAsyncThunk<
+  GetSessionResponse,
+  string,
+  { rejectValue: string }
+>('session/loadInterviewSession', async (sessionId, thunkApi) => {
+  try {
+    return await interviewApi.getSession(sessionId)
+  } catch (error) {
+    return thunkApi.rejectWithValue(toErrorMessage(error))
+  }
+})
 
 export const startInterviewSession = createAsyncThunk<
   StartSessionResponse,
@@ -89,6 +104,19 @@ const sessionSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(loadInterviewSession.pending, (state) => {
+        state.loadStatus = 'loading'
+        state.error = null
+      })
+      .addCase(loadInterviewSession.fulfilled, (state, action) => {
+        state.loadStatus = 'idle'
+        state.current = action.payload.session
+        state.transport = action.payload.transport
+      })
+      .addCase(loadInterviewSession.rejected, (state, action) => {
+        state.loadStatus = 'failed'
+        state.error = action.payload ?? 'Unable to load the session.'
+      })
       .addCase(startInterviewSession.pending, (state) => {
         state.startStatus = 'loading'
         state.error = null

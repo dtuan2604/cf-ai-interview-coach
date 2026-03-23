@@ -1,11 +1,16 @@
 import {
   applyMockAnswer,
+  buildMockHistoryEntry,
+  buildMockReport,
   completeMockSession,
   createMockSession,
 } from '../../shared/mockSession'
 import type {
   EndSessionRequest,
   EndSessionResponse,
+  GetHistoryResponse,
+  GetReportResponse,
+  GetSessionResponse,
   HealthResponse,
   InterviewSessionState,
   StartSessionRequest,
@@ -31,6 +36,28 @@ export const mockInterviewApi = {
       ok: true,
       service: 'cf-ai-interview-coach-frontend-mock',
       status: 'ok',
+      transport: 'mock',
+    }
+  },
+  async getHistory(): Promise<GetHistoryResponse> {
+    return {
+      items: [...sessions.values()]
+        .filter((session) => session.status === 'completed')
+        .map((session) => buildMockHistoryEntry(session))
+        .sort((left, right) => right.completedAt.localeCompare(left.completedAt)),
+      transport: 'mock',
+    }
+  },
+  async getReport(sessionId: string): Promise<GetReportResponse> {
+    const session = getSession(sessionId)
+    return {
+      report: buildMockReport(session),
+      transport: 'mock',
+    }
+  },
+  async getSession(sessionId: string): Promise<GetSessionResponse> {
+    return {
+      session: getSession(sessionId),
       transport: 'mock',
     }
   },

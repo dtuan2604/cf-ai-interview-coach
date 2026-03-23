@@ -1,6 +1,9 @@
 import type {
   EndSessionRequest,
   EndSessionResponse,
+  GetHistoryResponse,
+  GetSessionResponse,
+  GetReportResponse,
   HealthResponse,
   StartSessionRequest,
   StartSessionResponse,
@@ -33,6 +36,30 @@ export const httpInterviewApi = {
     }
 
     return (await response.json()) as HealthResponse
+  },
+  async getHistory(): Promise<GetHistoryResponse> {
+    const response = await fetch(buildApiUrl('/api/history'))
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`)
+    }
+
+    return (await response.json()) as GetHistoryResponse
+  },
+  async getReport(sessionId: string): Promise<GetReportResponse> {
+    const response = await fetch(buildApiUrl(`/api/reports/${sessionId}`))
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`)
+    }
+
+    return (await response.json()) as GetReportResponse
+  },
+  async getSession(sessionId: string): Promise<GetSessionResponse> {
+    const response = await fetch(buildApiUrl(`/api/sessions/${sessionId}`))
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`)
+    }
+
+    return (await response.json()) as GetSessionResponse
   },
   startSession(payload: StartSessionRequest) {
     return postJson<StartSessionResponse>('/api/sessions/start', payload)

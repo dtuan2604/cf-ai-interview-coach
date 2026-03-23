@@ -1,63 +1,81 @@
+import { useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { useAppSelector } from '../hooks/redux'
+import { useAppDispatch, useAppSelector } from '../hooks/redux'
+import { loadInterviewReport } from '../slices/reportSlice'
 
 export function ReportPage() {
   const { sessionId } = useParams()
-  const session = useAppSelector((state) => state.session.current)
-  const historyItem = useAppSelector((state) =>
-    state.history.items.find((item) => item.id === sessionId),
-  )
+  const dispatch = useAppDispatch()
+  const report = useAppSelector((state) => state.report.current)
+  const status = useAppSelector((state) => state.report.status)
+  const error = useAppSelector((state) => state.report.error)
 
-  const isCurrentSession = session?.id === sessionId
-  const title = isCurrentSession ? session?.role : historyItem?.role
-  const score = isCurrentSession ? session?.latestEvaluation?.score : historyItem?.score
+  useEffect(() => {
+    if (sessionId) {
+      void dispatch(loadInterviewReport(sessionId))
+    }
+  }, [dispatch, sessionId])
 
   return (
     <section className="stack-lg">
       <div className="page-heading">
         <div>
           <p className="eyebrow">Final report</p>
-          <h2>{title ?? 'Session report'} </h2>
+          <h2>{report?.role ?? 'Session report'}</h2>
         </div>
         <Link className="text-link" to="/history">
           Back to history
         </Link>
       </div>
 
-      <div className="info-grid">
-        <article className="panel stack-sm">
-          <p className="subtle">Overall score</p>
-          <strong className="score-large">
-            {typeof score === 'number' ? `${score.toFixed(1)}/10` : 'Pending'}
-          </strong>
-          <p>
-            Step 1 uses a local mock report. A later Worker step will replace this with a
-            structured report generated from D1 records and session memory.
-          </p>
-        </article>
-        <article className="panel stack-sm">
-          <p className="subtle">Readiness assessment</p>
-          <p>
-            Candidate shows a solid baseline, with the biggest upside coming from tighter
-            structure, clearer impact framing, and more explicit tradeoff reasoning.
-          </p>
-        </article>
-      </div>
+      {status === 'loading' ? (
+        <section className="panel stack-sm">
+          <h3>Loading report</h3>
+          <p className="subtle">Fetching the persisted session report from D1.</p>
+        </section>
+      ) : null}
 
-      <div className="info-grid">
-        <article className="panel stack-sm">
-          <h3>Strengths</h3>
-          <p>Communication is clear and direct. Answers usually identify the right direction.</p>
-        </article>
-        <article className="panel stack-sm">
-          <h3>Growth areas</h3>
-          <p>Add sharper examples, metrics, and decision criteria to make responses interview-ready.</p>
-        </article>
-        <article className="panel stack-sm">
-          <h3>Next steps</h3>
-          <p>Practice with role-specific follow-ups and maintain a tighter answer structure.</p>
-        </article>
-      </div>
+      {error ? <p className="error-text">{error}</p> : null}
+
+      {!report && status !== 'loading' ? (
+        <section className="panel stack-sm">
+          <h3>No persisted report found</h3>
+          <p className="subtle">
+            End a session after running the D1 migration and the report will be stored here.
+          </p>
+        </section>
+      ) : null}
+
+      {report ? (
+        <>
+          <div className="info-grid">
+            <article className="panel stack-sm">
+              <p className="subtle">Overall score</p>
+              <strong className="score-large">{report.overallScore.toFixed(1)}/10</strong>
+              <p>{report.summary}</p>
+            </article>
+            <article className="panel stack-sm">
+              <p className="subtle">Readiness assessment</p>
+              <p>{report.readinessAssessment}</p>
+            </article>
+          </div>
+
+          <div className="info-grid">
+            <article className="panel stack-sm">
+              <h3>Strengths</h3>
+              <p>{report.strengths.join(', ')}</p>
+            </article>
+            <article className="panel stack-sm">
+              <h3>Growth areas</h3>
+              <p>{report.growthAreas.join(', ')}</p>
+            </article>
+            <article className="panel stack-sm">
+              <h3>Next steps</h3>
+              <p>{report.nextSteps.join(', ')}</p>
+            </article>
+          </div>
+        </>
+      ) : null}
     </section>
   )
 }

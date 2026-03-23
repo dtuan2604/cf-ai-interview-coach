@@ -1,6 +1,9 @@
 import type {
   EndSessionRequest,
   EndSessionResponse,
+  GetHistoryResponse,
+  GetReportResponse,
+  GetSessionResponse,
   HealthResponse,
   StartSessionRequest,
   StartSessionResponse,
@@ -13,6 +16,9 @@ import { mockInterviewApi } from './mockInterviewApi'
 
 export type InterviewApi = {
   getHealth: () => Promise<HealthResponse>
+  getHistory: () => Promise<GetHistoryResponse>
+  getReport: (sessionId: string) => Promise<GetReportResponse>
+  getSession: (sessionId: string) => Promise<GetSessionResponse>
   startSession: (payload: StartSessionRequest) => Promise<StartSessionResponse>
   submitAnswer: (payload: SubmitAnswerRequest) => Promise<SubmitAnswerResponse>
   endSession: (payload: EndSessionRequest) => Promise<EndSessionResponse>

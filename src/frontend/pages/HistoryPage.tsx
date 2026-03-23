@@ -1,21 +1,50 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { useAppSelector } from '../hooks/redux'
+import { useAppDispatch, useAppSelector } from '../hooks/redux'
+import { loadInterviewHistory } from '../slices/historySlice'
 
 export function HistoryPage() {
+  const dispatch = useAppDispatch()
   const sessions = useAppSelector((state) => state.history.items)
+  const status = useAppSelector((state) => state.history.status)
+  const error = useAppSelector((state) => state.history.error)
+
+  useEffect(() => {
+    if (status === 'idle') {
+      void dispatch(loadInterviewHistory())
+    }
+  }, [dispatch, status])
 
   return (
     <section className="stack-lg">
       <div className="page-heading">
         <div>
           <p className="eyebrow">Session history</p>
-          <h2>Structured records live in D1 later</h2>
+          <h2>D1-backed session records</h2>
         </div>
         <p className="subtle">
-          Step 1 uses local mock history so the frontend stays runnable before the D1 layer
-          is added.
+          Durable Objects keep the live interview hot. D1 now stores the queryable history.
         </p>
       </div>
+
+      {status === 'loading' ? (
+        <section className="panel stack-sm">
+          <h3>Loading history</h3>
+          <p className="subtle">Fetching persisted sessions from D1.</p>
+        </section>
+      ) : null}
+
+      {error ? <p className="error-text">{error}</p> : null}
+
+      {status !== 'loading' && sessions.length === 0 ? (
+        <section className="panel stack-sm">
+          <h3>No sessions yet</h3>
+          <p className="subtle">
+            Complete an interview session after running the local D1 migration and it will show
+            up here.
+          </p>
+        </section>
+      ) : null}
 
       <div className="history-grid">
         {sessions.map((session) => (

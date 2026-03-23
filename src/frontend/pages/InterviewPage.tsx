@@ -1,18 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
-import { endInterviewSession, submitInterviewAnswer } from '../slices/sessionSlice'
+import {
+  endInterviewSession,
+  loadInterviewSession,
+  submitInterviewAnswer,
+} from '../slices/sessionSlice'
 
 export function InterviewPage() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const session = useAppSelector((state) => state.session.current)
+  const loadStatus = useAppSelector((state) => state.session.loadStatus)
   const answerStatus = useAppSelector((state) => state.session.answerStatus)
   const endStatus = useAppSelector((state) => state.session.endStatus)
   const sessionError = useAppSelector((state) => state.session.error)
   const transport = useAppSelector((state) => state.session.transport)
   const [draft, setDraft] = useState('')
+
+  useEffect(() => {
+    if (sessionId && (!session || session.id !== sessionId)) {
+      void dispatch(loadInterviewSession(sessionId))
+    }
+  }, [dispatch, session, sessionId])
 
   const currentQuestion = useMemo(() => {
     if (!session) {
@@ -22,8 +33,35 @@ export function InterviewPage() {
     return session.questions[session.questionIndex] ?? 'Session complete.'
   }, [session])
 
-  if (!session || session.id !== sessionId) {
+  if (!sessionId) {
     return <Navigate to="/setup" replace />
+  }
+
+  if (loadStatus === 'loading' && (!session || session.id !== sessionId)) {
+    return (
+      <section className="panel stack-sm">
+        <p className="eyebrow">Session loading</p>
+        <h2>Restoring interview state</h2>
+        <p className="subtle">
+          The Worker is loading the current session snapshot from its Durable Object.
+        </p>
+      </section>
+    )
+  }
+
+  if (!session || session.id !== sessionId) {
+    return (
+      <section className="panel stack-sm">
+        <p className="eyebrow">Session unavailable</p>
+        <h2>We could not restore this interview.</h2>
+        <p className="subtle">
+          {sessionError ?? 'The session may have expired or the Worker is not running.'}
+        </p>
+        <Link className="text-link" to="/setup">
+          Start a new session
+        </Link>
+      </section>
+    )
   }
 
   const handleSubmit = async () => {
@@ -151,8 +189,8 @@ export function InterviewPage() {
         <div className="panel stack-sm">
           <h3>Architecture checkpoint</h3>
           <p className="subtle">
-            The UI now flows through an explicit API client. Durable Objects later own live
-            session state, and D1 later stores reports, evaluations, and history records.
+            The UI now flows through an explicit API client. Durable Objects own live
+            session state, and D1 stores reports, evaluations, and history records.
           </p>
           <Link className="text-link" to="/history">
             View mock history

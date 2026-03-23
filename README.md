@@ -38,10 +38,11 @@ Current scaffold status:
 - Redux-style store scaffold with async session thunks
 - shared interview types
 - explicit frontend API boundary
-- Worker-powered local transport with mock session logic behind the routes
+- Worker-powered local transport with one Durable Object per live session
+- D1-backed history and persisted report metadata
 - setup documentation and prompt strategy docs
 
-The real Worker API, Durable Object memory, D1 schema, Workers AI calls, and voice capture pipeline are still upcoming.
+Durable Object-backed session state, D1-backed history/report metadata, and the local Worker transport are now in place. Workers AI, richer final reporting, and voice capture are still upcoming.
 
 ## Folder Structure
 
@@ -76,17 +77,23 @@ prompts/
 npm install
 ```
 
-2. Start the frontend:
+2. Start the Worker:
+
+```bash
+npm run dev:worker
+```
+
+3. Start the frontend:
 
 ```bash
 npm run dev
 ```
 
-3. Open the local Vite URL and verify:
+4. Open the local Vite URL and verify:
 
 - landing page renders
 - setup page updates interview preferences
-- mock interview session route opens
+- interview session route opens through the Worker
 - report and history pages render
 
 ## Environment Variables

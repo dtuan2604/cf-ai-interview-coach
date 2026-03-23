@@ -11,5 +11,27 @@
     "AI_TRANSCRIPTION_MODEL": "REPLACE_WITH_WORKERS_AI_STT_MODEL",
     "SESSION_SUMMARY_MAX_TOKENS": "1200",
     "REPORT_MAX_TOKENS": "2200"
-  }
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "INTERVIEW_SESSIONS",
+        "class_name": "InterviewSessionDurableObject"
+      }
+    ]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "interview-coach-db",
+      "database_id": "f71c65b3-3f42-4d82-9b98-e4e57c89e4cb",
+      "preview_database_id": "f71c65b3-3f42-4d82-9b98-e4e57c89e4cb"
+    }
+  ],
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["InterviewSessionDurableObject"]
+    }
+  ]
 }

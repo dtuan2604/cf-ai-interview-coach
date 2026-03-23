@@ -45,6 +45,20 @@ export type HistorySessionSummary = {
   summary: string
 }
 
+export type InterviewReport = {
+  sessionId: string
+  role: string
+  interviewType: string
+  overallScore: number
+  summary: string
+  readinessAssessment: string
+  strengths: string[]
+  growthAreas: string[]
+  nextSteps: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 export type InterviewSetupInput = {
   role: string
   interviewType: string
@@ -66,6 +80,11 @@ export type StartSessionResponse = {
   transport: ApiTransport
 }
 
+export type GetSessionResponse = {
+  session: InterviewSessionState
+  transport: ApiTransport
+}
+
 export type SubmitAnswerRequest = {
   sessionId: string
   answer: string
@@ -83,5 +102,15 @@ export type EndSessionRequest = {
 export type EndSessionResponse = {
   session: InterviewSessionState
   historyEntry: HistorySessionSummary
+  transport: ApiTransport
+}
+
+export type GetHistoryResponse = {
+  items: HistorySessionSummary[]
+  transport: ApiTransport
+}
+
+export type GetReportResponse = {
+  report: InterviewReport | null
   transport: ApiTransport
 }
