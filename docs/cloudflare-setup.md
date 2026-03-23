@@ -67,3 +67,7 @@ new_sqlite_classes = ["InterviewSessionDurableObject"]
 - D1: long-term metadata, structured reports, history queries, and analytics-friendly records.
 
 That separation is intentional and is the backbone of the architecture for this project.
+
+## Current Local Runtime Note
+
+The checked-in `wrangler.json` is intentionally lighter than the final target config so `wrangler dev` can run before D1 and Durable Objects are actually introduced. The full binding shape remains documented here and will be moved into the live config as those capabilities are implemented.

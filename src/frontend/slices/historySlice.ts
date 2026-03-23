@@ -1,5 +1,6 @@
-import { createSlice, nanoid, type PayloadAction } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 import type { HistorySessionSummary } from '../../shared/types'
+import { endInterviewSession } from './sessionSlice'
 
 type HistoryState = {
   items: HistorySessionSummary[]
@@ -35,20 +36,20 @@ const initialState: HistoryState = {
 const historySlice = createSlice({
   name: 'history',
   initialState,
-  reducers: {
-    recordCompletedSession: {
-      reducer: (state, action: PayloadAction<HistorySessionSummary>) => {
-        state.items.unshift(action.payload)
-      },
-      prepare: (session: Omit<HistorySessionSummary, 'id'>) => ({
-        payload: {
-          ...session,
-          id: session.completedAt ? `session-${session.completedAt}` : nanoid(),
-        },
-      }),
-    },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder.addCase(endInterviewSession.fulfilled, (state, action) => {
+      const existingIndex = state.items.findIndex(
+        (item) => item.id === action.payload.historyEntry.id,
+      )
+
+      if (existingIndex >= 0) {
+        state.items.splice(existingIndex, 1)
+      }
+
+      state.items.unshift(action.payload.historyEntry)
+    })
   },
 })
 
-export const { recordCompletedSession } = historySlice.actions
 export const historyReducer = historySlice.reducer

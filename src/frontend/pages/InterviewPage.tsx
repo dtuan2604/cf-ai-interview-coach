@@ -1,14 +1,17 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
-import { recordCompletedSession } from '../slices/historySlice'
-import { endSession, submitMockAnswer } from '../slices/sessionSlice'
+import { endInterviewSession, submitInterviewAnswer } from '../slices/sessionSlice'
 
 export function InterviewPage() {
   const { sessionId } = useParams()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const session = useAppSelector((state) => state.session.current)
+  const answerStatus = useAppSelector((state) => state.session.answerStatus)
+  const endStatus = useAppSelector((state) => state.session.endStatus)
+  const sessionError = useAppSelector((state) => state.session.error)
+  const transport = useAppSelector((state) => state.session.transport)
   const [draft, setDraft] = useState('')
 
   const currentQuestion = useMemo(() => {
@@ -23,32 +26,33 @@ export function InterviewPage() {
     return <Navigate to="/setup" replace />
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!draft.trim()) {
       return
     }
 
-    dispatch(submitMockAnswer({ text: draft }))
-    setDraft('')
-  }
-
-  const handleEndSession = () => {
-    dispatch(endSession())
-    dispatch(
-      recordCompletedSession({
-        role: session.role,
-        interviewType: session.interviewType,
-        difficulty: session.difficulty,
-        mode: session.mode === 'voice' ? 'Voice' : 'Text',
-        status: 'completed',
-        score: session.latestEvaluation?.score ?? 7,
-        completedAt: new Date().toISOString(),
-        summary:
-          session.latestEvaluation?.summary ??
-          'Mock session ended before the real Worker evaluation pipeline was connected.',
+    const result = await dispatch(
+      submitInterviewAnswer({
+        sessionId: session.id,
+        answer: draft,
       }),
     )
-    navigate(`/reports/${session.id}`)
+
+    if (submitInterviewAnswer.fulfilled.match(result)) {
+      setDraft('')
+    }
+  }
+
+  const handleEndSession = async () => {
+    const result = await dispatch(
+      endInterviewSession({
+        sessionId: session.id,
+      }),
+    )
+
+    if (endInterviewSession.fulfilled.match(result)) {
+      navigate(`/reports/${result.payload.session.id}`)
+    }
   }
 
   return (
@@ -92,10 +96,12 @@ export function InterviewPage() {
             <h3>Answer input</h3>
             <span className="pill">{session.mode === 'voice' ? 'voice' : 'text'} mode</span>
           </div>
+          <p className="subtle">Transport: {transport}</p>
           <p className="subtle">
             Text mode is the stable path. Voice mode will stay turn-based and will reuse this
             same interview engine after transcription is added.
           </p>
+          {sessionError ? <p className="error-text">{sessionError}</p> : null}
           <textarea
             className="answer-box"
             rows={8}
@@ -104,11 +110,19 @@ export function InterviewPage() {
             placeholder={`Answer the current question: ${currentQuestion}`}
           />
           <div className="actions">
-            <button className="button button-primary" onClick={handleSubmit}>
-              Submit answer locally
+            <button
+              className="button button-primary"
+              onClick={() => void handleSubmit()}
+              disabled={answerStatus === 'loading' || session.status === 'completed'}
+            >
+              {answerStatus === 'loading' ? 'Submitting...' : 'Submit answer'}
             </button>
-            <button className="button button-secondary" onClick={handleEndSession}>
-              End session
+            <button
+              className="button button-secondary"
+              onClick={() => void handleEndSession()}
+              disabled={endStatus === 'loading'}
+            >
+              {endStatus === 'loading' ? 'Ending...' : 'End session'}
             </button>
           </div>
         </div>
@@ -137,8 +151,8 @@ export function InterviewPage() {
         <div className="panel stack-sm">
           <h3>Architecture checkpoint</h3>
           <p className="subtle">
-            Durable Object later owns this session. D1 later stores reports, evaluations, and
-            history records.
+            The UI now flows through an explicit API client. Durable Objects later own live
+            session state, and D1 later stores reports, evaluations, and history records.
           </p>
           <Link className="text-link" to="/history">
             View mock history

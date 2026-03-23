@@ -11,29 +11,5 @@
     "AI_TRANSCRIPTION_MODEL": "REPLACE_WITH_WORKERS_AI_STT_MODEL",
     "SESSION_SUMMARY_MAX_TOKENS": "1200",
     "REPORT_MAX_TOKENS": "2200"
-  },
-  "ai": {
-    "binding": "AI"
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "cf-ai-interview-coach",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID"
-    }
-  ],
-  "durable_objects": {
-    "bindings": [
-      {
-        "name": "INTERVIEW_SESSIONS",
-        "class_name": "InterviewSessionDurableObject"
-      }
-    ]
-  },
-  "migrations": [
-    {
-      "tag": "v1",
-      "new_sqlite_classes": ["InterviewSessionDurableObject"]
-    }
-  ]
+  }
 }

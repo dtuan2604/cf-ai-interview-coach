@@ -35,9 +35,10 @@ Cloudflare-based AI Interview Coach built with a text-first experience and an op
 Current scaffold status:
 
 - app shell and route structure
-- Redux-style store scaffold
+- Redux-style store scaffold with async session thunks
 - shared interview types
-- mock interview experience so the frontend is runnable
+- explicit frontend API boundary
+- Worker-powered local transport with mock session logic behind the routes
 - setup documentation and prompt strategy docs
 
 The real Worker API, Durable Object memory, D1 schema, Workers AI calls, and voice capture pipeline are still upcoming.
@@ -95,6 +96,7 @@ Copy `.env.example` to `.env` and update as needed.
 Frontend:
 
 - `VITE_APP_TITLE`
+- `VITE_API_TRANSPORT`
 - `VITE_API_BASE_URL`
 - `VITE_DEFAULT_MODEL_LABEL`
 
@@ -109,6 +111,22 @@ Worker runtime:
 - `REPORT_MAX_TOKENS`
 
 Model IDs are intentionally configuration-driven so the LLM choice is swappable without code changes.
+
+The frontend transport is also configuration-driven:
+
+- `VITE_API_TRANSPORT=worker` is now the recommended local path for development.
+- `VITE_API_TRANSPORT=mock` remains available as a fallback if you want to bypass the Worker temporarily.
+
+## Local Development With Worker Transport
+
+Run the frontend and Worker in separate terminals:
+
+```bash
+npm run dev:worker
+npm run dev
+```
+
+The Vite dev server proxies `/api` requests to the local Worker on `http://127.0.0.1:8787`.
 
 ## Planned Wrangler Bindings
 

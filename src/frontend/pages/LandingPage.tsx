@@ -44,6 +44,7 @@ export function LandingPage() {
             Real model IDs stay in Worker environment configuration so deployment can swap
             models without code edits.
           </p>
+          <p className="subtle">Current transport: {appConfig.apiTransport}</p>
         </div>
       </div>
 

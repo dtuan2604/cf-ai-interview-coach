@@ -154,6 +154,10 @@ h3 {
   color: var(--text-soft);
 }
 
+.error-text {
+  color: #9e402c;
+}
+
 .stack-xl,
 .stack-lg,
 .stack-md,

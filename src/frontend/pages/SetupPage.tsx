@@ -1,27 +1,28 @@
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
 import { difficultyOptions, interviewTypeOptions, roleOptions } from '../services/mockInterview'
-import { startMockSession } from '../slices/sessionSlice'
+import { startInterviewSession } from '../slices/sessionSlice'
 import { resetSetup, setDifficulty, setInterviewType, setMode, setRole } from '../slices/setupSlice'
-import { store } from '../store'
 
 export function SetupPage() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const setup = useAppSelector((state) => state.setup)
+  const startStatus = useAppSelector((state) => state.session.startStatus)
+  const sessionError = useAppSelector((state) => state.session.error)
 
-  const handleStart = () => {
-    dispatch(
-      startMockSession({
+  const handleStart = async () => {
+    const result = await dispatch(
+      startInterviewSession({
         role: setup.role,
         interviewType: setup.interviewType,
         difficulty: setup.difficulty,
         mode: setup.mode,
       }),
     )
-    const sessionId = store.getState().session.current?.id
-    if (sessionId) {
-      navigate(`/interview/${sessionId}`)
+
+    if (startInterviewSession.fulfilled.match(result)) {
+      navigate(`/interview/${result.payload.session.id}`)
     }
   }
 
@@ -97,8 +98,14 @@ export function SetupPage() {
           </div>
         </fieldset>
 
-        <button className="button button-primary" onClick={handleStart}>
-          Launch mock session
+        {sessionError ? <p className="error-text">{sessionError}</p> : null}
+
+        <button
+          className="button button-primary"
+          onClick={() => void handleStart()}
+          disabled={startStatus === 'loading'}
+        >
+          {startStatus === 'loading' ? 'Starting session...' : 'Launch session'}
         </button>
       </div>
 
@@ -111,8 +118,8 @@ export function SetupPage() {
           leaving integration points explicit.
         </p>
         <p className="subtle">
-          Next steps will swap this local session bootstrap for a Worker API that creates a real
-          interview session and binds it to one Durable Object per session.
+          The frontend now goes through an API contract boundary. The default transport is still
+          mock, and the next backend step will point the same contract at the Worker runtime.
         </p>
       </aside>
     </section>

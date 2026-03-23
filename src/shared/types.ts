@@ -1,4 +1,5 @@
 export type InterviewMode = 'text' | 'voice'
+export type ApiTransport = 'mock' | 'worker'
 
 export type TranscriptSpeaker = 'assistant' | 'user' | 'coach'
 
@@ -42,4 +43,45 @@ export type HistorySessionSummary = {
   score: number
   completedAt: string
   summary: string
+}
+
+export type InterviewSetupInput = {
+  role: string
+  interviewType: string
+  difficulty: string
+  mode: InterviewMode
+}
+
+export type HealthResponse = {
+  ok: boolean
+  service: string
+  status: 'ok' | 'placeholder'
+  transport: ApiTransport | 'worker'
+}
+
+export type StartSessionRequest = InterviewSetupInput
+
+export type StartSessionResponse = {
+  session: InterviewSessionState
+  transport: ApiTransport
+}
+
+export type SubmitAnswerRequest = {
+  sessionId: string
+  answer: string
+}
+
+export type SubmitAnswerResponse = {
+  session: InterviewSessionState
+  transport: ApiTransport
+}
+
+export type EndSessionRequest = {
+  sessionId: string
+}
+
+export type EndSessionResponse = {
+  session: InterviewSessionState
+  historyEntry: HistorySessionSummary
+  transport: ApiTransport
 }
