@@ -18,14 +18,19 @@ type DurableObjectNamespaceLike = {
   idFromName(name: string): DurableObjectIdLike
   get(id: DurableObjectIdLike): DurableObjectStubLike
 }
+type AiBindingLike = {
+  run(model: string, payload: unknown): Promise<unknown>
+}
 
 export type WorkerEnv = {
   INTERVIEW_SESSIONS: DurableObjectNamespaceLike
   DB: D1DatabaseLike
+  AI?: AiBindingLike
   AI_INTERVIEW_MODEL?: string
   AI_EVALUATION_MODEL?: string
   AI_REPORT_MODEL?: string
   AI_TRANSCRIPTION_MODEL?: string
+  AI_RUNTIME_MODE?: string
   SESSION_SUMMARY_MAX_TOKENS?: string
   REPORT_MAX_TOKENS?: string
 }
@@ -43,7 +48,7 @@ export default {
     }
 
     if (request.method === 'GET' && url.pathname === '/api/health') {
-      return withCors(handleHealth())
+      return withCors(handleHealth(env))
     }
 
     if (request.method === 'GET' && url.pathname === '/api/history') {

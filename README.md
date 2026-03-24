@@ -40,6 +40,7 @@ Current scaffold status:
 - explicit frontend API boundary
 - Worker-powered local transport with one Durable Object per live session
 - D1-backed history and persisted report metadata
+- Workers AI adapter path with configuration-driven runtime mode
 - setup documentation and prompt strategy docs
 
 Durable Object-backed session state, D1-backed history/report metadata, and the local Worker transport are now in place. Workers AI, richer final reporting, and voice capture are still upcoming.

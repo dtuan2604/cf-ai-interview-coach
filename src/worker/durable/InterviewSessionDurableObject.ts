@@ -1,7 +1,5 @@
 import {
-  applyMockAnswer,
   completeMockSession,
-  createMockSession,
 } from '../../shared/mockSession'
 import type {
   EndSessionResponse,
@@ -12,6 +10,8 @@ import type {
   SubmitAnswerRequest,
   SubmitAnswerResponse,
 } from '../../shared/types'
+import { advanceInterviewSession, startInterviewSession } from '../ai/interviewEngine'
+import type { WorkerEnv } from '../index'
 import { json } from '../routes/json'
 
 type DurableObjectStorageLike = {
@@ -28,11 +28,13 @@ type StartPayload = StartSessionRequest & { sessionId: string }
 
 export class InterviewSessionDurableObject {
   readonly state: DurableObjectStateLike
+  private readonly env: WorkerEnv
   private readonly initialized: Promise<void>
   private session: InterviewSessionState | null = null
 
-  constructor(state: DurableObjectStateLike) {
+  constructor(state: DurableObjectStateLike, env: WorkerEnv) {
     this.state = state
+    this.env = env
     this.initialized = this.state.blockConcurrencyWhile(async () => {
       this.session = (await this.state.storage.get<InterviewSessionState>('session')) ?? null
     })
@@ -93,7 +95,7 @@ export class InterviewSessionDurableObject {
 
   private async handleStart(request: Request) {
     const payload = (await request.json()) as StartPayload
-    const session = createMockSession(payload, payload.sessionId)
+    const session = await startInterviewSession(this.env, payload)
     await this.persistSession(session)
 
     const response: StartSessionResponse = {
@@ -116,7 +118,7 @@ export class InterviewSessionDurableObject {
     }
 
     const payload = (await request.json()) as SubmitAnswerRequest
-    const session = applyMockAnswer(this.session, payload.answer)
+    const session = await advanceInterviewSession(this.env, this.session, payload)
     await this.persistSession(session)
 
     const response: SubmitAnswerResponse = {

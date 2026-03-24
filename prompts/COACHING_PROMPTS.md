@@ -13,6 +13,7 @@ This document defines the prompt strategy for the AI Interview Coach. Step 1 add
 
 The Worker will read the following environment variables at runtime:
 
+- `AI_RUNTIME_MODE`: `mock` for safe local development, `workers` to call Workers AI.
 - `AI_INTERVIEW_MODEL`: model used to generate the next interview question and adjust coaching direction.
 - `AI_EVALUATION_MODEL`: model used to score and critique each answer.
 - `AI_REPORT_MODEL`: model used to generate the final post-session report.
