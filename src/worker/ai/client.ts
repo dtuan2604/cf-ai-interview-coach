@@ -59,6 +59,6 @@ export async function runTextModel(
   const response = await env.AI.run(model, {
     prompt,
   })
-
+  // console.log('Workers AI response:', response)
   return extractResponseText(response as AiTextResponse)
 }

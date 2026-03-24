@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useVoiceConversation } from '../hooks/useVoiceConversation'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
+import { buildApiUrl } from '../services/api'
 import {
   endInterviewSession,
   loadInterviewSession,
@@ -11,6 +12,7 @@ import {
 
 export function InterviewPage() {
   const { sessionId } = useParams()
+  const location = useLocation()
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const session = useAppSelector((state) => state.session.current)
@@ -42,13 +44,51 @@ export function InterviewPage() {
   } = useVoiceConversation()
   const lastSpokenResponseRef = useRef('')
   const lastSessionIdRef = useRef<string | null>(null)
-  const autoEndingSessionRef = useRef<string | null>(null)
+  const finalizingSessionRef = useRef<string | null>(null)
+  const currentPathRef = useRef('')
+  const [pendingNavigation, setPendingNavigation] = useState<string | null>(null)
+  const showLeaveDialog = pendingNavigation !== null
+
+  const finalizeSession = useCallback(async (
+    nextAction: 'report' | 'leave',
+    onLeave?: () => void,
+  ) => {
+    if (!session || finalizingSessionRef.current === session.id) {
+      return false
+    }
+
+    finalizingSessionRef.current = session.id
+    stopConversation()
+
+    const result = await dispatch(
+      endInterviewSession({
+        sessionId: session.id,
+      }),
+    )
+
+    if (endInterviewSession.fulfilled.match(result)) {
+      if (nextAction === 'report') {
+        navigate(`/reports/${result.payload.session.id}`)
+      } else {
+        onLeave?.()
+      }
+
+      return true
+    }
+
+    finalizingSessionRef.current = null
+    return false
+  }, [dispatch, navigate, session, stopConversation])
 
   useEffect(() => {
     if (sessionId && (!session || session.id !== sessionId)) {
       void dispatch(loadInterviewSession(sessionId))
     }
   }, [dispatch, session, sessionId])
+
+  useEffect(() => {
+    currentPathRef.current = `${location.pathname}${location.search}${location.hash}`
+  }, [location])
 
   useEffect(() => {
     if (!session) {
@@ -58,7 +98,7 @@ export function InterviewPage() {
     if (lastSessionIdRef.current !== session.id) {
       lastSessionIdRef.current = session.id
       lastSpokenResponseRef.current = ''
-      autoEndingSessionRef.current = null
+      finalizingSessionRef.current = null
       stopConversation()
       clearVoiceTranscript()
       clearReadyTurn()
@@ -129,13 +169,17 @@ export function InterviewPage() {
     }
 
     lastSpokenResponseRef.current = latestAiResponse.signature
-    speakText(latestAiResponse.spokenText, () => {
+    void speakText(latestAiResponse.spokenText, () => {
       if (session.status === 'in_progress') {
         startListening()
+        return
       }
+
+      void finalizeSession('report')
     })
   }, [
     endStatus,
+    finalizeSession,
     isConversationActive,
     latestAiResponse,
     session,
@@ -181,26 +225,109 @@ export function InterviewPage() {
       return
     }
 
-    if (autoEndingSessionRef.current === session.id) {
+    if (finalizingSessionRef.current === session.id) {
       return
     }
 
-    autoEndingSessionRef.current = session.id
-    stopConversation()
+    if (session.mode === 'voice' && latestAiResponse.signature) {
+      if (isSpeaking || lastSpokenResponseRef.current !== latestAiResponse.signature) {
+        return
+      }
+    }
 
-    void dispatch(
-      endInterviewSession({
-        sessionId: session.id,
-      }),
-    ).then((result) => {
-      if (endInterviewSession.fulfilled.match(result)) {
-        navigate(`/reports/${result.payload.session.id}`)
+    void finalizeSession('report')
+  }, [endStatus, finalizeSession, isSpeaking, latestAiResponse, session])
+
+  useEffect(() => {
+    if (!session || session.status !== 'in_progress') {
+      return
+    }
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    const handlePageHide = () => {
+      if (finalizingSessionRef.current === session.id) {
         return
       }
 
-      autoEndingSessionRef.current = null
-    })
-  }, [dispatch, endStatus, navigate, session, stopConversation])
+      const url = buildApiUrl(`/api/sessions/${session.id}/end`)
+      if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
+        navigator.sendBeacon(url)
+        return
+      }
+
+      void fetch(url, {
+        method: 'POST',
+        keepalive: true,
+      })
+    }
+
+    const handleDocumentClick = (event: MouseEvent) => {
+      if (event.defaultPrevented) {
+        return
+      }
+
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return
+      }
+
+      const target = event.target
+      if (!(target instanceof Element)) {
+        return
+      }
+
+      const anchor = target.closest('a[href]')
+      if (!(anchor instanceof HTMLAnchorElement)) {
+        return
+      }
+
+      if (anchor.target && anchor.target !== '_self') {
+        return
+      }
+
+      const destination = new URL(anchor.href, window.location.origin)
+      if (destination.origin !== window.location.origin) {
+        return
+      }
+
+      const nextPath = `${destination.pathname}${destination.search}${destination.hash}`
+      if (nextPath === currentPathRef.current) {
+        return
+      }
+
+      event.preventDefault()
+      setPendingNavigation(nextPath)
+    }
+
+    const handlePopState = () => {
+      if (finalizingSessionRef.current === session.id) {
+        return
+      }
+
+      const nextPath = `${window.location.pathname}${window.location.search}${window.location.hash}`
+      if (nextPath === currentPathRef.current) {
+        return
+      }
+
+      window.history.pushState(null, '', currentPathRef.current)
+      setPendingNavigation(nextPath)
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener('pagehide', handlePageHide)
+    window.addEventListener('popstate', handlePopState)
+    document.addEventListener('click', handleDocumentClick, true)
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener('pagehide', handlePageHide)
+      window.removeEventListener('popstate', handlePopState)
+      document.removeEventListener('click', handleDocumentClick, true)
+    }
+  }, [session])
 
   if (!sessionId) {
     return <Navigate to="/setup" replace />
@@ -260,16 +387,25 @@ export function InterviewPage() {
   }
 
   const handleEndSession = async () => {
-    stopConversation()
-    const result = await dispatch(
-      endInterviewSession({
-        sessionId: session.id,
-      }),
-    )
+    await finalizeSession('report')
+  }
 
-    if (endInterviewSession.fulfilled.match(result)) {
-      navigate(`/reports/${result.payload.session.id}`)
+  const handleConfirmLeave = async () => {
+    const nextPath = pendingNavigation
+    const didLeave = await finalizeSession('leave', () => {
+      setPendingNavigation(null)
+      if (nextPath) {
+        navigate(nextPath)
+      }
+    })
+
+    if (!didLeave) {
+      setPendingNavigation(null)
     }
+  }
+
+  const handleStayInSession = () => {
+    setPendingNavigation(null)
   }
 
   return (
@@ -475,6 +611,33 @@ export function InterviewPage() {
           </Link>
         </div>
       </aside>
+
+      {showLeaveDialog ? (
+        <div className="modal-backdrop" role="presentation">
+          <section className="modal-card panel stack-md" role="dialog" aria-modal="true">
+            <div className="stack-sm">
+              <p className="eyebrow">Leave interview</p>
+              <h3>End this unfinished session?</h3>
+              <p className="subtle">
+                If you leave now, the current interview will be ended and you will not return to
+                this live session.
+              </p>
+            </div>
+            <div className="actions">
+              <button className="button button-secondary" onClick={handleStayInSession}>
+                Stay here
+              </button>
+              <button
+                className="button button-primary"
+                onClick={() => void handleConfirmLeave()}
+                disabled={endStatus === 'loading'}
+              >
+                {endStatus === 'loading' ? 'Ending...' : 'Leave interview'}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </section>
   )
 }

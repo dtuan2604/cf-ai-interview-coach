@@ -62,7 +62,7 @@ function getSpeechSynthesisSupport() {
   )
 }
 
-export function useVoiceConversation(silenceMs = 6000) {
+export function useVoiceConversation(silenceMs = 4000) {
   const recognitionConstructor = getSpeechRecognitionConstructor()
   const isSpeechSupported = getSpeechSynthesisSupport()
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)

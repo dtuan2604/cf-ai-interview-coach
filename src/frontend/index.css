@@ -407,6 +407,22 @@ h3 {
   color: var(--accent-strong);
 }
 
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(28, 42, 47, 0.36);
+  backdrop-filter: blur(6px);
+  z-index: 20;
+}
+
+.modal-card {
+  width: min(560px, 100%);
+}
+
 @media (max-width: 960px) {
   #root {
     width: min(100%, calc(100% - 24px));
