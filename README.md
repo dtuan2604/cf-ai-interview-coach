@@ -99,6 +99,12 @@ npm run dev
 - interview session route opens through the Worker
 - report and history pages render
 
+5. Run the full local verification bundle when needed:
+
+```bash
+npm run verify
+```
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and update as needed.
@@ -167,6 +173,11 @@ See [docs/cloudflare-setup.md](docs/cloudflare-setup.md) for the concrete checkl
 - Pages project creation
 - Workers AI enablement
 - environment variable and secret configuration
+
+## Testing And Schema Docs
+
+- [docs/testing.md](docs/testing.md) for automated and manual verification guidance
+- [docs/d1-schema.md](docs/d1-schema.md) for the D1 persistence model
 
 ## Prompt Strategy
 
