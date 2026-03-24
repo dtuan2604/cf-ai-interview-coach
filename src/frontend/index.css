@@ -374,6 +374,21 @@ h3 {
   border: 1px solid var(--border);
 }
 
+.voice-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.52);
+  border: 1px solid var(--border);
+}
+
+.pill-live {
+  background: rgba(199, 124, 68, 0.16);
+  color: #8a4d22;
+}
+
 .history-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }

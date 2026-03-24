@@ -6,6 +6,8 @@ import type {
   StartSessionResponse,
   SubmitAnswerRequest,
   SubmitAnswerResponse,
+  SubmitVoiceTurnRequest,
+  SubmitVoiceTurnResponse,
 } from '../../shared/types'
 import { generateFinalReport } from '../ai/reportEngine'
 import {
@@ -88,6 +90,23 @@ export async function submitAnswer(
   await upsertSession(env.DB, response.session)
   await upsertLatestEvaluation(env.DB, response.session)
   return response
+}
+
+export async function submitVoiceTurn(
+  env: WorkerEnv,
+  payload: SubmitVoiceTurnRequest,
+): Promise<SubmitVoiceTurnResponse> {
+  const acceptedTranscript = payload.transcript.trim()
+  const response = await submitAnswer(env, {
+    sessionId: payload.sessionId,
+    answer: acceptedTranscript,
+  })
+
+  return {
+    ...response,
+    acceptedTranscript,
+    source: payload.source,
+  }
 }
 
 export async function endSession(

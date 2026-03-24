@@ -5,7 +5,7 @@ Cloudflare-based AI Interview Coach built with a text-first experience and an op
 ## Product Scope
 
 - Primary MVP path: structured text interview sessions
-- Secondary MVP path: optional turn-based voice input that reuses the same interview engine
+- Secondary MVP path: optional browser-based voice conversation that reuses the same interview engine
 - Key assignment requirements covered by the target architecture:
 - LLM via Workers AI
 - workflow and coordination via Durable Objects and optional Workflows
@@ -42,9 +42,10 @@ Current scaffold status:
 - D1-backed history and persisted report metadata
 - Workers AI adapter path with configuration-driven runtime mode
 - Final report generation from D1-backed session and evaluation records
+- Conversational voice mode with browser speech capture, silence-based turn detection, and shared Worker session processing
 - setup documentation and prompt strategy docs
 
-Durable Object-backed session state, D1-backed history/report metadata, Workers AI adapter paths, and inline final report generation are now in place. Turn-based voice capture is still upcoming.
+Durable Object-backed session state, D1-backed history/report metadata, Workers AI adapter paths, inline final report generation, and conversational voice mode are now in place.
 
 ## Folder Structure
 
@@ -120,6 +121,7 @@ Worker runtime:
 - `REPORT_MAX_TOKENS`
 
 Model IDs are intentionally configuration-driven so the LLM choice is swappable without code changes.
+`AI_TRANSCRIPTION_MODEL` is reserved for a later server-side transcription upgrade; the current MVP voice path uses browser speech recognition, browser speech synthesis, a 6-second silence window, and a manual transcript fallback.
 
 The frontend transport is also configuration-driven:
 
@@ -136,6 +138,7 @@ npm run dev
 ```
 
 The Vite dev server proxies `/api` requests to the local Worker on `http://127.0.0.1:8787`.
+The Worker dev server is pinned to port `8787` so the frontend does not accidentally proxy to an older Wrangler instance on another port.
 
 ## Planned Wrangler Bindings
 

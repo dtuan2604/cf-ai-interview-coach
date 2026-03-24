@@ -17,6 +17,8 @@ import type {
   StartSessionResponse,
   SubmitAnswerRequest,
   SubmitAnswerResponse,
+  SubmitVoiceTurnRequest,
+  SubmitVoiceTurnResponse,
 } from '../../shared/types'
 
 const sessions = new Map<string, InterviewSessionState>()
@@ -76,6 +78,18 @@ export const mockInterviewApi = {
 
     return {
       session,
+      transport: 'mock',
+    }
+  },
+  async submitVoiceTurn(payload: SubmitVoiceTurnRequest): Promise<SubmitVoiceTurnResponse> {
+    const acceptedTranscript = payload.transcript.trim()
+    const session = applyMockAnswer(getSession(payload.sessionId), acceptedTranscript)
+    sessions.set(session.id, session)
+
+    return {
+      session,
+      acceptedTranscript,
+      source: payload.source,
       transport: 'mock',
     }
   },

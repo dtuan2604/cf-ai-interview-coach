@@ -9,6 +9,8 @@ import type {
   StartSessionResponse,
   SubmitAnswerRequest,
   SubmitAnswerResponse,
+  SubmitVoiceTurnRequest,
+  SubmitVoiceTurnResponse,
 } from '../../shared/types'
 import { appConfig } from './config'
 import { httpInterviewApi } from './httpInterviewApi'
@@ -21,6 +23,7 @@ export type InterviewApi = {
   getSession: (sessionId: string) => Promise<GetSessionResponse>
   startSession: (payload: StartSessionRequest) => Promise<StartSessionResponse>
   submitAnswer: (payload: SubmitAnswerRequest) => Promise<SubmitAnswerResponse>
+  submitVoiceTurn: (payload: SubmitVoiceTurnRequest) => Promise<SubmitVoiceTurnResponse>
   endSession: (payload: EndSessionRequest) => Promise<EndSessionResponse>
 }
 

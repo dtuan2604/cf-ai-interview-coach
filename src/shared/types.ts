@@ -1,5 +1,6 @@
 export type InterviewMode = 'text' | 'voice'
 export type ApiTransport = 'mock' | 'worker'
+export type VoiceTranscriptSource = 'browser' | 'manual'
 
 export type TranscriptSpeaker = 'assistant' | 'user' | 'coach'
 
@@ -93,6 +94,20 @@ export type SubmitAnswerRequest = {
 
 export type SubmitAnswerResponse = {
   session: InterviewSessionState
+  transport: ApiTransport
+}
+
+export type SubmitVoiceTurnRequest = {
+  sessionId: string
+  transcript: string
+  source: VoiceTranscriptSource
+  durationMs?: number | null
+}
+
+export type SubmitVoiceTurnResponse = {
+  session: InterviewSessionState
+  acceptedTranscript: string
+  source: VoiceTranscriptSource
   transport: ApiTransport
 }
 

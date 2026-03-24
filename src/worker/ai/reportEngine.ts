@@ -17,6 +17,19 @@ function unique(values: string[]) {
   return [...new Set(values.filter(Boolean))]
 }
 
+function normalizeStringList(value: unknown, fallback: string[]) {
+  if (!Array.isArray(value)) {
+    return fallback
+  }
+
+  const normalized = value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+  return normalized.length > 0 ? normalized : fallback
+}
+
 function buildFallbackReport(
   session: PersistedSessionSnapshot,
   feedback: PersistedFeedbackRecord[],
@@ -92,12 +105,27 @@ async function generateReportWithAi(
     role: session.role,
     interviewType: session.interviewType,
     overallScore: session.overallScore,
-    summary: parsed.summary,
-    readinessAssessment: parsed.readinessAssessment,
-    strengths: parsed.strengths.slice(0, 4),
-    growthAreas: parsed.growthAreas.slice(0, 4),
-    nextSteps: parsed.nextSteps.slice(0, 4),
-    standoutMoments: parsed.standoutMoments.slice(0, 3),
+    summary:
+      typeof parsed.summary === 'string' && parsed.summary.trim()
+        ? parsed.summary.trim()
+        : 'This session showed useful baseline signal, but the candidate needs sharper specifics and stronger impact framing.',
+    readinessAssessment:
+      typeof parsed.readinessAssessment === 'string' && parsed.readinessAssessment.trim()
+        ? parsed.readinessAssessment.trim()
+        : 'Solid early baseline with room to strengthen precision, evidence, and delivery.',
+    strengths: normalizeStringList(parsed.strengths, ['Clear communication']).slice(0, 4),
+    growthAreas: normalizeStringList(
+      parsed.growthAreas,
+      ['Add more specifics and stronger business impact framing'],
+    ).slice(0, 4),
+    nextSteps: normalizeStringList(
+      parsed.nextSteps,
+      ['Practice answers with clearer structure and measurable outcomes'],
+    ).slice(0, 4),
+    standoutMoments: normalizeStringList(
+      parsed.standoutMoments,
+      ['The session produced a useful baseline answer to build on.'],
+    ).slice(0, 3),
     createdAt,
     updatedAt: createdAt,
   }
@@ -108,9 +136,16 @@ export async function generateFinalReport(
   session: PersistedSessionSnapshot,
   feedback: PersistedFeedbackRecord[],
 ): Promise<InterviewReport> {
+  const fallbackReport = buildFallbackReport(session, feedback)
+
   if (getAiRuntimeMode(env) !== 'workers') {
-    return buildFallbackReport(session, feedback)
+    return fallbackReport
   }
 
-  return generateReportWithAi(env, session, feedback)
+  try {
+    return await generateReportWithAi(env, session, feedback)
+  } catch (error) {
+    console.warn('Workers AI report generation failed. Falling back to deterministic report.', error)
+    return fallbackReport
+  }
 }

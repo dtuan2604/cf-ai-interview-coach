@@ -27,6 +27,19 @@ function createTurn(
   }
 }
 
+function normalizeStringList(value: unknown, fallback: string[]) {
+  if (!Array.isArray(value)) {
+    return fallback
+  }
+
+  const normalized = value
+    .filter((item): item is string => typeof item === 'string')
+    .map((item) => item.trim())
+    .filter(Boolean)
+
+  return normalized.length > 0 ? normalized : fallback
+}
+
 async function generateQuestionWithAi(
   env: WorkerEnv,
   config: InterviewSetupInput,
@@ -39,7 +52,12 @@ async function generateQuestionWithAi(
 
   const response = await runTextModel(env, model, buildQuestionPrompt(config, session))
   const parsed = parseJsonObject<{ question: string }>(response)
-  return parsed.question.trim()
+  const question = typeof parsed.question === 'string' ? parsed.question.trim() : ''
+  if (!question) {
+    throw new Error('Workers AI returned an empty interview question.')
+  }
+
+  return question
 }
 
 async function evaluateAnswerWithAi(
@@ -54,12 +72,19 @@ async function evaluateAnswerWithAi(
 
   const response = await runTextModel(env, model, buildEvaluationPrompt(session, answer))
   const parsed = parseJsonObject<EvaluationSnapshot>(response)
+  const score = typeof parsed.score === 'number' ? parsed.score : Number(parsed.score ?? 0)
+  const summary = typeof parsed.summary === 'string' && parsed.summary.trim()
+    ? parsed.summary.trim()
+    : 'The answer covered the basics, but it needs stronger specificity and clearer impact.'
 
   return {
-    score: Number(parsed.score),
-    strengths: parsed.strengths.slice(0, 3),
-    improvements: parsed.improvements.slice(0, 3),
-    summary: parsed.summary,
+    score: Number.isFinite(score) ? score : 0,
+    strengths: normalizeStringList(parsed.strengths, ['Clear communication']).slice(0, 3),
+    improvements: normalizeStringList(
+      parsed.improvements,
+      ['Add more specifics and measurable outcomes'],
+    ).slice(0, 3),
+    summary,
   } satisfies EvaluationSnapshot
 }
 

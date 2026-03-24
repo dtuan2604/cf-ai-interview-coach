@@ -17,7 +17,7 @@ The Worker will read the following environment variables at runtime:
 - `AI_INTERVIEW_MODEL`: model used to generate the next interview question and adjust coaching direction.
 - `AI_EVALUATION_MODEL`: model used to score and critique each answer.
 - `AI_REPORT_MODEL`: model used to generate the final post-session report.
-- `AI_TRANSCRIPTION_MODEL`: optional speech-to-text model for turn-based voice mode.
+- `AI_TRANSCRIPTION_MODEL`: optional speech-to-text model for a later server-side voice upgrade.
 
 The application code should support fallbacks such as:
 
@@ -128,5 +128,6 @@ Return JSON with:
 
 - Evaluation and report prompts should request JSON to keep Worker parsing deterministic.
 - Voice mode should reuse the same evaluation and next-question prompts after transcription.
+- The current MVP runs voice in the browser: the AI speaks the latest interviewer response aloud, browser speech recognition captures the user's answer, and the app waits about 6 seconds of silence before submitting the turn through the same Worker session flow as text input.
 - Prompt builders belong in a shared Worker-side `prompts/` module and should be unit tested.
 - Final report generation should use D1 session and evaluation records as the primary source rather than live Durable Object state.

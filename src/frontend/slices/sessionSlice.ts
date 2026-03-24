@@ -13,6 +13,8 @@ import type {
   StartSessionResponse,
   SubmitAnswerRequest,
   SubmitAnswerResponse,
+  SubmitVoiceTurnRequest,
+  SubmitVoiceTurnResponse,
 } from '../../shared/types'
 import { appConfig } from '../services/config'
 import { interviewApi } from '../services/interviewApi'
@@ -25,6 +27,7 @@ type SessionState = {
   loadStatus: RequestState
   startStatus: RequestState
   answerStatus: RequestState
+  voiceStatus: RequestState
   endStatus: RequestState
   error: string | null
 }
@@ -35,6 +38,7 @@ const initialState: SessionState = {
   loadStatus: 'idle',
   startStatus: 'idle',
   answerStatus: 'idle',
+  voiceStatus: 'idle',
   endStatus: 'idle',
   error: null,
 }
@@ -91,6 +95,18 @@ export const endInterviewSession = createAsyncThunk<
   }
 })
 
+export const submitInterviewVoiceTurn = createAsyncThunk<
+  SubmitVoiceTurnResponse,
+  SubmitVoiceTurnRequest,
+  { rejectValue: string }
+>('session/submitInterviewVoiceTurn', async (payload, thunkApi) => {
+  try {
+    return await interviewApi.submitVoiceTurn(payload)
+  } catch (error) {
+    return thunkApi.rejectWithValue(toErrorMessage(error))
+  }
+})
+
 const sessionSlice = createSlice({
   name: 'session',
   initialState,
@@ -142,6 +158,19 @@ const sessionSlice = createSlice({
       .addCase(submitInterviewAnswer.rejected, (state, action) => {
         state.answerStatus = 'failed'
         state.error = action.payload ?? 'Unable to submit the answer.'
+      })
+      .addCase(submitInterviewVoiceTurn.pending, (state) => {
+        state.voiceStatus = 'loading'
+        state.error = null
+      })
+      .addCase(submitInterviewVoiceTurn.fulfilled, (state, action) => {
+        state.voiceStatus = 'idle'
+        state.current = action.payload.session
+        state.transport = action.payload.transport
+      })
+      .addCase(submitInterviewVoiceTurn.rejected, (state, action) => {
+        state.voiceStatus = 'failed'
+        state.error = action.payload ?? 'Unable to submit the voice turn.'
       })
       .addCase(endInterviewSession.pending, (state) => {
         state.endStatus = 'loading'

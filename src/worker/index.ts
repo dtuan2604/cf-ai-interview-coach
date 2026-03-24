@@ -9,6 +9,7 @@ import { json } from './routes/json'
 import { handleGetSession } from './routes/getSession'
 import { handleStartSession } from './routes/startSession'
 import { handleSubmitAnswer } from './routes/submitAnswer'
+import { handleSubmitVoiceTurn } from './routes/submitVoiceTurn'
 
 type DurableObjectIdLike = object
 type DurableObjectStubLike = {
@@ -41,6 +42,7 @@ export default {
     const reportMatch = url.pathname.match(/^\/api\/reports\/([^/]+)$/)
     const sessionMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)$/)
     const answerMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)\/answer$/)
+    const voiceTurnMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)\/voice-turn$/)
     const endMatch = url.pathname.match(/^\/api\/sessions\/([^/]+)\/end$/)
 
     if (request.method === 'OPTIONS') {
@@ -69,6 +71,10 @@ export default {
 
     if (request.method === 'POST' && answerMatch?.[1]) {
       return withCors(await handleSubmitAnswer(request, env, answerMatch[1]))
+    }
+
+    if (request.method === 'POST' && voiceTurnMatch?.[1]) {
+      return withCors(await handleSubmitVoiceTurn(request, env, voiceTurnMatch[1]))
     }
 
     if (request.method === 'POST' && endMatch?.[1]) {

@@ -9,6 +9,8 @@ import type {
   StartSessionResponse,
   SubmitAnswerRequest,
   SubmitAnswerResponse,
+  SubmitVoiceTurnRequest,
+  SubmitVoiceTurnResponse,
 } from '../../shared/types'
 import { buildApiUrl } from './api'
 
@@ -67,6 +69,12 @@ export const httpInterviewApi = {
   submitAnswer(payload: SubmitAnswerRequest) {
     return postJson<SubmitAnswerResponse>(
       `/api/sessions/${payload.sessionId}/answer`,
+      payload,
+    )
+  },
+  submitVoiceTurn(payload: SubmitVoiceTurnRequest) {
+    return postJson<SubmitVoiceTurnResponse>(
+      `/api/sessions/${payload.sessionId}/voice-turn`,
       payload,
     )
   },

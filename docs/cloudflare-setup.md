@@ -71,4 +71,4 @@ That separation is intentional and is the backbone of the architecture for this 
 
 ## Current Local Runtime Note
 
-The checked-in `wrangler.json` now includes the live Durable Object binding, migration, D1 binding, and AI binding so `wrangler dev` can run the real session-memory path locally. `AI_RUNTIME_MODE=mock` remains the recommended local default until you want to spend Workers AI usage on live inference.
+The checked-in `wrangler.json` now includes the live Durable Object binding, migration, D1 binding, and AI binding so `wrangler dev` can run the real session-memory path locally. `AI_RUNTIME_MODE=mock` remains the recommended local default until you want to spend Workers AI usage on live inference. The current MVP voice path does not require extra Cloudflare setup because transcription happens in the browser before the transcript is submitted to the Worker.
