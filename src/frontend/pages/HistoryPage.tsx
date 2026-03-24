@@ -20,17 +20,17 @@ export function HistoryPage() {
       <div className="page-heading">
         <div>
           <p className="eyebrow">Session history</p>
-          <h2>D1-backed session records</h2>
+          <h2>Saved interview sessions</h2>
         </div>
         <p className="subtle">
-          Durable Objects keep the live interview hot. D1 now stores the queryable history.
+          Return to past practice sessions and reopen the full coaching report for each one.
         </p>
       </div>
 
       {status === 'loading' ? (
         <section className="panel stack-sm">
           <h3>Loading history</h3>
-          <p className="subtle">Fetching persisted sessions from D1.</p>
+          <p className="subtle">Gathering your saved interview sessions.</p>
         </section>
       ) : null}
 
@@ -40,8 +40,7 @@ export function HistoryPage() {
         <section className="panel stack-sm">
           <h3>No sessions yet</h3>
           <p className="subtle">
-            Complete an interview session after running the local D1 migration and it will show
-            up here.
+            Complete your first interview session and it will appear here.
           </p>
         </section>
       ) : null}

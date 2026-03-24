@@ -12,7 +12,7 @@ export function AppLayout() {
     <div className="app-shell">
       <header className="topbar">
         <div>
-          <p className="eyebrow">Cloudflare AI Assignment</p>
+          <p className="eyebrow">Interview practice</p>
           <h1 className="brand">{appConfig.title}</h1>
         </div>
         <nav className="topnav" aria-label="Primary">

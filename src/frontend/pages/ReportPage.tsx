@@ -31,7 +31,7 @@ export function ReportPage() {
       {status === 'loading' ? (
         <section className="panel stack-sm">
           <h3>Loading report</h3>
-          <p className="subtle">Fetching the persisted session report from D1.</p>
+          <p className="subtle">Preparing your coaching report.</p>
         </section>
       ) : null}
 
@@ -39,9 +39,9 @@ export function ReportPage() {
 
       {!report && status !== 'loading' ? (
         <section className="panel stack-sm">
-          <h3>No persisted report found</h3>
+          <h3>No report found</h3>
           <p className="subtle">
-            End a session after running the D1 migration and the report will be stored here.
+            Finish a session and the full coaching summary will appear here.
           </p>
         </section>
       ) : null}

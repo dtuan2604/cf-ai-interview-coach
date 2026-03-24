@@ -19,7 +19,6 @@ export function InterviewPage() {
   const voiceStatus = useAppSelector((state) => state.session.voiceStatus)
   const endStatus = useAppSelector((state) => state.session.endStatus)
   const sessionError = useAppSelector((state) => state.session.error)
-  const transport = useAppSelector((state) => state.session.transport)
   const [draft, setDraft] = useState('')
   const {
     isRecognitionSupported,
@@ -213,7 +212,7 @@ export function InterviewPage() {
         <p className="eyebrow">Session loading</p>
         <h2>Restoring interview state</h2>
         <p className="subtle">
-          The Worker is loading the current session snapshot from its Durable Object.
+          Restoring your session and recent progress.
         </p>
       </section>
     )
@@ -225,7 +224,7 @@ export function InterviewPage() {
         <p className="eyebrow">Session unavailable</p>
         <h2>We could not restore this interview.</h2>
         <p className="subtle">
-          {sessionError ?? 'The session may have expired or the Worker is not running.'}
+          {sessionError ?? 'This session may have expired or is no longer available.'}
         </p>
         <Link className="text-link" to="/setup">
           Start a new session
@@ -314,10 +313,9 @@ export function InterviewPage() {
             <h3>Answer input</h3>
             <span className="pill">{session.mode === 'voice' ? 'voice' : 'text'} mode</span>
           </div>
-          <p className="subtle">Transport: {transport}</p>
           <p className="subtle">
             Text mode remains the stable path. Voice mode now runs as a browser-based spoken
-            conversation loop on top of the same Worker session engine.
+            conversation with one clear turn at a time.
           </p>
           {sessionError ? <p className="error-text">{sessionError}</p> : null}
           {session.mode === 'voice' ? (
@@ -386,7 +384,7 @@ export function InterviewPage() {
                       : isListening
                         ? `Listening now. The system waits about ${(silenceMs / 1000).toFixed(0)} seconds after you stop speaking before it responds.`
                         : voiceStatus === 'loading'
-                          ? 'Submitting the captured answer to the Worker.'
+                          ? 'Submitting your answer and preparing the next response.'
                           : voiceDurationMs
                             ? `Latest voice turn lasted ${(voiceDurationMs / 1000).toFixed(1)}s.`
                             : 'Start the voice conversation to hear the interviewer and answer out loud.'}
@@ -451,8 +449,7 @@ export function InterviewPage() {
         <div className="panel stack-sm">
           <h3>Live coaching</h3>
           <p className="subtle">
-            This sidebar is where per-answer evaluation and memory-aware coaching will surface
-            once the Worker pipeline is connected.
+            Use this panel to track how your last answer landed and what to improve on the next one.
           </p>
           <div className="metric-card">
             <span className="subtle">Latest score</span>
@@ -462,19 +459,19 @@ export function InterviewPage() {
             <p className="subtle">Current focus</p>
             <p>
               {session.latestEvaluation?.summary ??
-                'Waiting for the first answer. Future steps replace this mock state with Workers AI evaluation.'}
+                'Waiting for the first answer. Once you respond, coaching guidance will show up here.'}
             </p>
           </div>
         </div>
 
         <div className="panel stack-sm">
-          <h3>Architecture checkpoint</h3>
+          <h3>Session tips</h3>
           <p className="subtle">
-            The UI now flows through an explicit API client. Durable Objects own live
-            session state, and D1 stores reports, evaluations, and history records.
+            Aim for clear structure, concrete examples, and direct outcomes. Shorter answers can
+            still work if they stay specific.
           </p>
           <Link className="text-link" to="/history">
-            View mock history
+            View saved sessions
           </Link>
         </div>
       </aside>

@@ -86,14 +86,14 @@ export function SetupPage() {
               className={setup.mode === 'text' ? 'toggle toggle-active' : 'toggle'}
               onClick={() => dispatch(setMode('text'))}
             >
-              Text-first
+              Text
             </button>
             <button
               type="button"
               className={setup.mode === 'voice' ? 'toggle toggle-active' : 'toggle'}
               onClick={() => dispatch(setMode('voice'))}
             >
-              Voice turns
+              Voice
             </button>
           </div>
         </fieldset>
@@ -110,16 +110,15 @@ export function SetupPage() {
       </div>
 
       <aside className="panel stack-sm">
-        <p className="eyebrow">Execution note</p>
-        <h3>Why this step comes first</h3>
+        <p className="eyebrow">Session preview</p>
+        <h3>What to expect</h3>
         <p>
-          Before wiring Workers, Durable Objects, D1, and Workers AI, the product needs stable
-          UI surfaces and clear state boundaries. This step makes the frontend executable while
-          leaving integration points explicit.
+          You will move through a guided interview one question at a time, with feedback after
+          each answer and a final report at the end.
         </p>
         <p className="subtle">
-          The frontend now goes through an API contract boundary. The default transport is still
-          mock, and the next backend step will point the same contract at the Worker runtime.
+          Text mode is the easiest way to practice complete answers. Voice mode is better when you
+          want the session to feel more like a live conversation.
         </p>
       </aside>
     </section>

@@ -1,18 +1,17 @@
 import { Link } from 'react-router-dom'
-import { appConfig } from '../services/config'
 
-const architectureItems = [
+const experienceItems = [
   {
-    title: 'Workers AI',
-    body: 'Generates interview questions, evaluates answers, and powers the final report.',
+    title: 'Realistic practice',
+    body: 'Work through focused interview questions that feel structured and role-specific.',
   },
   {
-    title: 'Durable Objects',
-    body: 'Own one interview session at a time with ordered turns, scoring state, and prompt context.',
+    title: 'Live coaching',
+    body: 'Get answer-by-answer feedback that highlights strengths, gaps, and what to sharpen next.',
   },
   {
-    title: 'D1',
-    body: 'Stores queryable session records, reports, and history data across interviews.',
+    title: 'Saved reports',
+    body: 'Review completed sessions, track patterns, and return to coaching summaries later.',
   },
 ]
 
@@ -21,12 +20,12 @@ export function LandingPage() {
     <section className="stack-xl">
       <div className="hero-card">
         <div className="hero-copy">
-          <p className="eyebrow">Text-first interview simulation</p>
+          <p className="eyebrow">Interview simulation</p>
           <h2>Practice interviews with stateful coaching, not a generic chat window.</h2>
           <p className="hero-text">
-            The MVP focuses on a guided interview workflow: configure a role, run a structured
-            session, receive answer-by-answer feedback, and finish with a report backed by
-            Cloudflare-native state and persistence.
+            Guided interview workflow: configure a role, run a structured
+            session, receive answer-by-answer feedback, and finish with a clear report you can
+            revisit after the conversation ends.
           </p>
           <div className="actions">
             <Link className="button button-primary" to="/setup">
@@ -38,20 +37,20 @@ export function LandingPage() {
           </div>
         </div>
         <div className="hero-meta panel">
-          <p className="subtle">Frontend model label</p>
-          <strong>{appConfig.defaultModelLabel}</strong>
+          <p className="subtle">Session format</p>
+          <strong>Guided, one question at a time</strong>
           <p className="subtle">
-            Real model IDs stay in Worker environment configuration so deployment can swap
-            models without code edits.
+            Choose text or voice, answer in your own style, and let the coach steer the next step
+            based on how the conversation is going.
           </p>
-          <p className="subtle">Current transport: {appConfig.apiTransport}</p>
+          <p className="subtle">Best for focused practice, not open-ended chatting.</p>
         </div>
       </div>
 
       <div className="info-grid">
-        {architectureItems.map((item) => (
+        {experienceItems.map((item) => (
           <article key={item.title} className="panel stack-sm">
-            <p className="eyebrow">Platform mapping</p>
+            <p className="eyebrow">Experience</p>
             <h3>{item.title}</h3>
             <p>{item.body}</p>
           </article>
@@ -63,16 +62,16 @@ export function LandingPage() {
           <p className="eyebrow">MVP focus</p>
           <h3>Stable text mode first</h3>
           <p>
-            Voice is intentionally secondary and turn-based. The shared interview engine matters
-            more than streaming complexity for the assignment.
+            Text is the most reliable way to rehearse complete answers. Voice adds a more natural
+            practice mode when you want to speak your responses aloud.
           </p>
         </article>
         <article className="panel stack-sm">
-          <p className="eyebrow">State boundary</p>
-          <h3>Durable Objects vs D1</h3>
+          <p className="eyebrow">Coaching style</p>
+          <h3>Structured, not chatty</h3>
           <p>
-            Durable Objects keep per-session working state hot and ordered. D1 keeps durable,
-            structured data that supports history, analytics, and reports.
+            The coach stays in interview mode, keeps the pace moving, and finishes with a report
+            instead of drifting into a generic assistant conversation.
           </p>
         </article>
       </div>
