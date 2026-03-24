@@ -41,9 +41,10 @@ Current scaffold status:
 - Worker-powered local transport with one Durable Object per live session
 - D1-backed history and persisted report metadata
 - Workers AI adapter path with configuration-driven runtime mode
+- Final report generation from D1-backed session and evaluation records
 - setup documentation and prompt strategy docs
 
-Durable Object-backed session state, D1-backed history/report metadata, and the local Worker transport are now in place. Workers AI, richer final reporting, and voice capture are still upcoming.
+Durable Object-backed session state, D1-backed history/report metadata, Workers AI adapter paths, and inline final report generation are now in place. Turn-based voice capture is still upcoming.
 
 ## Folder Structure
 

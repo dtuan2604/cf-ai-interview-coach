@@ -73,6 +73,10 @@ export function ReportPage() {
               <h3>Next steps</h3>
               <p>{report.nextSteps.join(', ')}</p>
             </article>
+            <article className="panel stack-sm">
+              <h3>Standout moments</h3>
+              <p>{report.standoutMoments.join(', ')}</p>
+            </article>
           </div>
         </>
       ) : null}

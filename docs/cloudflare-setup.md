@@ -1,6 +1,6 @@
 # Cloudflare Setup Guide
 
-This guide lists the manual setup required outside the repo. The local Worker runtime, Durable Object binding, and D1 persistence path are already active in the repo; Workers AI is still upcoming.
+This guide lists the manual setup required outside the repo. The local Worker runtime, Durable Object binding, D1 persistence path, and Workers AI adapter path are already active in the repo.
 
 ## Required Cloudflare Products
 
@@ -24,8 +24,8 @@ This guide lists the manual setup required outside the repo. The local Worker ru
 10. Set the Pages output directory to `dist`.
 11. Add Worker environment variables for `AI_INTERVIEW_MODEL`, `AI_EVALUATION_MODEL`, `AI_REPORT_MODEL`, and optional voice configuration.
 12. Add secrets or environment-specific vars in the Cloudflare dashboard instead of hardcoding model IDs.
-13. Run the local D1 migration with `npm run db:migrate:local`.
-14. Run the remote D1 migration with `npx wrangler d1 execute <database-name> --remote --file migrations/0001_initial.sql` when you are ready to deploy.
+13. Run the local D1 migrations with `npm run db:migrate:local`.
+14. Run the remote D1 migrations with `npx wrangler d1 migrations apply <database-name> --remote` when you are ready to deploy.
 
 ## Wrangler Configuration Targets
 
@@ -71,4 +71,4 @@ That separation is intentional and is the backbone of the architecture for this 
 
 ## Current Local Runtime Note
 
-The checked-in `wrangler.json` now includes the live Durable Object binding, migration, and D1 binding so `wrangler dev` can run the real session-memory path locally. The AI binding remains documented here and will move into the live config when that step is implemented.
+The checked-in `wrangler.json` now includes the live Durable Object binding, migration, D1 binding, and AI binding so `wrangler dev` can run the real session-memory path locally. `AI_RUNTIME_MODE=mock` remains the recommended local default until you want to spend Workers AI usage on live inference.

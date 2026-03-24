@@ -99,13 +99,12 @@ Inputs:
 - Session memory summary
 
 Return JSON with:
-- overallAssessment
-- readinessLevel
+- summary
+- readinessAssessment
 - strengths
 - growthAreas
-- recommendedNextSteps
+- nextSteps
 - standoutMoments
-- reportSummary
 ```
 
 ## Memory Injection Strategy
@@ -130,3 +129,4 @@ Return JSON with:
 - Evaluation and report prompts should request JSON to keep Worker parsing deterministic.
 - Voice mode should reuse the same evaluation and next-question prompts after transcription.
 - Prompt builders belong in a shared Worker-side `prompts/` module and should be unit tested.
+- Final report generation should use D1 session and evaluation records as the primary source rather than live Durable Object state.

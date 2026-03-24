@@ -108,6 +108,10 @@ export function buildMockReport(session: InterviewSessionState): InterviewReport
       'Add measurable outcomes to examples.',
       'Prepare one follow-up detail for each core story.',
     ],
+    standoutMoments: session.transcript
+      .filter((turn) => turn.speaker === 'user')
+      .slice(-2)
+      .map((turn) => turn.text),
     createdAt,
     updatedAt: createdAt,
   }

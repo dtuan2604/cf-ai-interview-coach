@@ -55,6 +55,7 @@ export type InterviewReport = {
   strengths: string[]
   growthAreas: string[]
   nextSteps: string[]
+  standoutMoments: string[]
   createdAt: string
   updatedAt: string
 }

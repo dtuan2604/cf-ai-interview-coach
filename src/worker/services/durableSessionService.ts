@@ -7,7 +7,10 @@ import type {
   SubmitAnswerRequest,
   SubmitAnswerResponse,
 } from '../../shared/types'
+import { generateFinalReport } from '../ai/reportEngine'
 import {
+  getSessionSnapshot,
+  listFeedbackForSession,
   upsertLatestEvaluation,
   upsertReport,
   upsertSession,
@@ -98,6 +101,17 @@ export async function endSession(
   )
 
   await upsertSession(env.DB, response.session)
-  await upsertReport(env.DB, response.session)
+
+  const [sessionSnapshot, feedback] = await Promise.all([
+    getSessionSnapshot(env.DB, response.session.id),
+    listFeedbackForSession(env.DB, response.session.id),
+  ])
+
+  if (!sessionSnapshot) {
+    throw new Error(`Session ${response.session.id} was not found in D1 after completion.`)
+  }
+
+  const report = await generateFinalReport(env, sessionSnapshot, feedback)
+  await upsertReport(env.DB, report)
   return response
 }

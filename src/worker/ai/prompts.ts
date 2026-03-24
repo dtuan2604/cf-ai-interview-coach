@@ -1,4 +1,8 @@
 import type { InterviewSessionState, InterviewSetupInput } from '../../shared/types'
+import type {
+  PersistedFeedbackRecord,
+  PersistedSessionSnapshot,
+} from '../db/interviewRepository'
 
 function formatRecentTurns(session: InterviewSessionState | null) {
   if (!session) {
@@ -72,5 +76,49 @@ Interview context:
 
 Candidate answer:
 ${answer}
+`.trim()
+}
+
+export function buildReportPrompt(
+  session: PersistedSessionSnapshot,
+  feedback: PersistedFeedbackRecord[],
+) {
+  const feedbackBlock = feedback.length > 0
+    ? feedback
+        .map((item) => [
+          `Question ${item.questionIndex + 1}: ${item.questionText}`,
+          `Score: ${item.score}`,
+          `Strengths: ${item.strengths.join(', ') || 'None'}`,
+          `Improvements: ${item.improvements.join(', ') || 'None'}`,
+          `Summary: ${item.summary}`,
+        ].join('\n'))
+        .join('\n\n')
+    : 'No completed answer evaluations were stored for this session.'
+
+  return `
+You are writing the final report for a structured AI interview coach product.
+
+Return raw JSON only with this shape:
+{"summary":"string","readinessAssessment":"string","strengths":["string"],"growthAreas":["string"],"nextSteps":["string"],"standoutMoments":["string"]}
+
+Rules:
+- Keep the tone professional, direct, and coaching-oriented.
+- Use the evaluation records as the primary evidence.
+- Provide 2-4 strengths.
+- Provide 2-4 growth areas.
+- Provide 2-4 next steps.
+- Provide 1-3 standout moments grounded in the session.
+- Do not include markdown or commentary outside the JSON.
+
+Session metadata:
+- Role: ${session.role}
+- Interview type: ${session.interviewType}
+- Difficulty: ${session.difficulty}
+- Mode: ${session.mode}
+- Overall score: ${session.overallScore}
+- Latest summary: ${session.latestSummary ?? 'None'}
+
+Evaluation records:
+${feedbackBlock}
 `.trim()
 }

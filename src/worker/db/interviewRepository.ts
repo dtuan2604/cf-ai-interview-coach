@@ -1,4 +1,4 @@
-import { buildMockHistoryEntry, buildMockReport } from '../../shared/mockSession'
+import { buildMockHistoryEntry } from '../../shared/mockSession'
 import type {
   HistorySessionSummary,
   InterviewReport,
@@ -41,8 +41,67 @@ type ReportRow = {
   strengths_json: string
   growth_areas_json: string
   next_steps_json: string
+  standout_moments_json: string
   created_at: string
   updated_at: string
+}
+
+type FeedbackRow = {
+  session_id: string
+  question_index: number
+  question_text: string
+  answer_text: string
+  score: number | null
+  strengths_json: string
+  improvements_json: string
+  summary: string
+  created_at: string
+}
+
+type SessionSnapshotRow = {
+  id: string
+  role: string
+  interview_type: string
+  difficulty: string
+  mode: string
+  status: string
+  question_count: number
+  current_question_index: number
+  overall_score: number | null
+  latest_summary: string | null
+  started_at: string
+  ended_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type PersistedFeedbackRecord = {
+  sessionId: string
+  questionIndex: number
+  questionText: string
+  answerText: string
+  score: number
+  strengths: string[]
+  improvements: string[]
+  summary: string
+  createdAt: string
+}
+
+export type PersistedSessionSnapshot = {
+  id: string
+  role: string
+  interviewType: string
+  difficulty: string
+  mode: string
+  status: string
+  questionCount: number
+  currentQuestionIndex: number
+  overallScore: number
+  latestSummary: string | null
+  startedAt: string
+  endedAt: string | null
+  createdAt: string
+  updatedAt: string
 }
 
 function getLastAnswerMetadata(session: InterviewSessionState) {
@@ -132,15 +191,13 @@ export async function upsertLatestEvaluation(db: D1DatabaseLike, session: Interv
   ).run()
 }
 
-export async function upsertReport(db: D1DatabaseLike, session: InterviewSessionState) {
-  const report = buildMockReport(session)
-
+export async function upsertReport(db: D1DatabaseLike, report: InterviewReport) {
   await db.prepare(
     `INSERT OR REPLACE INTO interview_reports (
       session_id, role, interview_type, overall_score, summary,
       readiness_assessment, strengths_json, growth_areas_json, next_steps_json,
-      created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      standout_moments_json, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).bind(
     report.sessionId,
     report.role,
@@ -151,6 +208,7 @@ export async function upsertReport(db: D1DatabaseLike, session: InterviewSession
     JSON.stringify(report.strengths),
     JSON.stringify(report.growthAreas),
     JSON.stringify(report.nextSteps),
+    JSON.stringify(report.standoutMoments),
     report.createdAt,
     report.updatedAt,
   ).run()
@@ -184,7 +242,7 @@ export async function getReport(
   const row = await db.prepare(
     `SELECT session_id, role, interview_type, overall_score, summary,
             readiness_assessment, strengths_json, growth_areas_json, next_steps_json,
-            created_at, updated_at
+            standout_moments_json, created_at, updated_at
      FROM interview_reports
      WHERE session_id = ?`,
   ).bind(sessionId).first<ReportRow>()
@@ -203,9 +261,69 @@ export async function getReport(
     strengths: JSON.parse(row.strengths_json) as string[],
     growthAreas: JSON.parse(row.growth_areas_json) as string[],
     nextSteps: JSON.parse(row.next_steps_json) as string[],
+    standoutMoments: JSON.parse(row.standout_moments_json) as string[],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   }
+}
+
+export async function getSessionSnapshot(
+  db: D1DatabaseLike,
+  sessionId: string,
+): Promise<PersistedSessionSnapshot | null> {
+  const row = await db.prepare(
+    `SELECT id, role, interview_type, difficulty, mode, status, question_count,
+            current_question_index, overall_score, latest_summary, started_at,
+            ended_at, created_at, updated_at
+     FROM interview_sessions
+     WHERE id = ?`,
+  ).bind(sessionId).first<SessionSnapshotRow>()
+
+  if (!row) {
+    return null
+  }
+
+  return {
+    id: row.id,
+    role: row.role,
+    interviewType: row.interview_type,
+    difficulty: row.difficulty,
+    mode: row.mode,
+    status: row.status,
+    questionCount: row.question_count,
+    currentQuestionIndex: row.current_question_index,
+    overallScore: row.overall_score ?? 0,
+    latestSummary: row.latest_summary,
+    startedAt: row.started_at,
+    endedAt: row.ended_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  }
+}
+
+export async function listFeedbackForSession(
+  db: D1DatabaseLike,
+  sessionId: string,
+): Promise<PersistedFeedbackRecord[]> {
+  const rows = await db.prepare(
+    `SELECT session_id, question_index, question_text, answer_text, score,
+            strengths_json, improvements_json, summary, created_at
+     FROM interview_feedback
+     WHERE session_id = ?
+     ORDER BY question_index ASC`,
+  ).bind(sessionId).all<FeedbackRow>()
+
+  return rows.results.map((row) => ({
+    sessionId: row.session_id,
+    questionIndex: row.question_index,
+    questionText: row.question_text,
+    answerText: row.answer_text,
+    score: row.score ?? 0,
+    strengths: JSON.parse(row.strengths_json) as string[],
+    improvements: JSON.parse(row.improvements_json) as string[],
+    summary: row.summary,
+    createdAt: row.created_at,
+  }))
 }
 
 export function buildHistoryFallback(session: InterviewSessionState) {
