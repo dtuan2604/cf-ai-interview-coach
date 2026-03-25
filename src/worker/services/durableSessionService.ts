@@ -1,4 +1,6 @@
 import type {
+  DeleteSessionRequest,
+  DeleteSessionResponse,
   EndSessionRequest,
   EndSessionResponse,
   GetSessionResponse,
@@ -11,6 +13,7 @@ import type {
 } from '../../shared/types'
 import { generateFinalReport } from '../ai/reportEngine'
 import {
+  deleteSessionRecords,
   getSessionSnapshot,
   listFeedbackForSession,
   upsertLatestEvaluation,
@@ -133,4 +136,23 @@ export async function endSession(
   const report = await generateFinalReport(env, sessionSnapshot, feedback)
   await upsertReport(env.DB, report)
   return response
+}
+
+export async function deleteSession(
+  env: WorkerEnv,
+  payload: DeleteSessionRequest,
+): Promise<DeleteSessionResponse> {
+  await readJson<{ ok: true }>(
+    await getSessionStub(env, payload.sessionId).fetch('https://session.internal/internal/delete', {
+      method: 'POST',
+    }),
+  )
+
+  await deleteSessionRecords(env.DB, payload.sessionId)
+
+  return {
+    ok: true,
+    sessionId: payload.sessionId,
+    transport: 'worker',
+  }
 }

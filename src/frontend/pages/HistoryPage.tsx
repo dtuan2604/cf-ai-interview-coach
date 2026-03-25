@@ -2,18 +2,34 @@ import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
 import { loadInterviewHistory } from '../slices/historySlice'
+import { deleteInterviewSession } from '../slices/sessionSlice'
 
 export function HistoryPage() {
   const dispatch = useAppDispatch()
   const sessions = useAppSelector((state) => state.history.items)
   const status = useAppSelector((state) => state.history.status)
   const error = useAppSelector((state) => state.history.error)
+  const deleteStatus = useAppSelector((state) => state.session.deleteStatus)
+  const deleteSessionId = useAppSelector((state) => state.session.deleteSessionId)
+  const deleteError = useAppSelector((state) => state.session.deleteError)
 
   useEffect(() => {
     if (status === 'idle') {
       void dispatch(loadInterviewHistory())
     }
   }, [dispatch, status])
+
+  const handleDelete = async (sessionId: string, role: string) => {
+    const confirmed = window.confirm(
+      `Delete the saved ${role} interview session? This also removes its report and feedback history.`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    await dispatch(deleteInterviewSession({ sessionId }))
+  }
 
   return (
     <section className="stack-lg">
@@ -35,6 +51,7 @@ export function HistoryPage() {
       ) : null}
 
       {error ? <p className="error-text">{error}</p> : null}
+      {deleteError ? <p className="error-text">{deleteError}</p> : null}
 
       {status !== 'loading' && sessions.length === 0 ? (
         <section className="panel stack-sm">
@@ -61,9 +78,20 @@ export function HistoryPage() {
             <p>{session.summary}</p>
             <div className="score-row">
               <strong>{session.score.toFixed(1)}/10</strong>
-              <Link className="text-link" to={`/reports/${session.id}`}>
-                Open report
-              </Link>
+              <div className="actions">
+                <Link className="text-link" to={`/reports/${session.id}`}>
+                  Open report
+                </Link>
+                <button
+                  className="button button-secondary"
+                  onClick={() => void handleDelete(session.id, session.role)}
+                  disabled={deleteStatus === 'loading'}
+                >
+                  {deleteStatus === 'loading' && deleteSessionId === session.id
+                    ? 'Deleting...'
+                    : 'Delete'}
+                </button>
+              </div>
             </div>
           </article>
         ))}

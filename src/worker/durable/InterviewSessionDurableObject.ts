@@ -17,6 +17,7 @@ import { json } from '../routes/json'
 type DurableObjectStorageLike = {
   get<T>(key: string): Promise<T | undefined>
   put<T>(key: string, value: T): Promise<void>
+  delete(key: string): Promise<boolean>
 }
 
 type DurableObjectStateLike = {
@@ -58,6 +59,10 @@ export class InterviewSessionDurableObject {
 
     if (request.method === 'POST' && url.pathname === '/internal/end') {
       return this.handleEnd()
+    }
+
+    if (request.method === 'POST' && url.pathname === '/internal/delete') {
+      return this.handleDelete()
     }
 
     return json(
@@ -147,5 +152,14 @@ export class InterviewSessionDurableObject {
 
     await this.persistSession(response.session)
     return json(response)
+  }
+
+  private async handleDelete() {
+    this.session = null
+    await this.state.storage.delete('session')
+
+    return json({
+      ok: true,
+    })
   }
 }

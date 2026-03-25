@@ -6,6 +6,8 @@ import {
   createMockSession,
 } from '../../shared/mockSession'
 import type {
+  DeleteSessionRequest,
+  DeleteSessionResponse,
   EndSessionRequest,
   EndSessionResponse,
   GetHistoryResponse,
@@ -99,6 +101,15 @@ export const mockInterviewApi = {
 
     return {
       ...result,
+      transport: 'mock',
+    }
+  },
+  async deleteSession(payload: DeleteSessionRequest): Promise<DeleteSessionResponse> {
+    sessions.delete(payload.sessionId)
+
+    return {
+      ok: true,
+      sessionId: payload.sessionId,
       transport: 'mock',
     }
   },

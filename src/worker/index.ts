@@ -1,6 +1,7 @@
 import { InterviewSessionDurableObject } from './durable/InterviewSessionDurableObject'
 import type { D1DatabaseLike } from './db/interviewRepository'
 import { handleCorsPreflight, withCors } from './routes/cors'
+import { handleDeleteSession } from './routes/deleteSession'
 import { handleEndSession } from './routes/endSession'
 import { handleGetHistory } from './routes/getHistory'
 import { handleGetReport } from './routes/getReport'
@@ -79,6 +80,10 @@ export default {
 
     if (request.method === 'POST' && endMatch?.[1]) {
       return withCors(await handleEndSession(env, endMatch[1]))
+    }
+
+    if (request.method === 'DELETE' && sessionMatch?.[1]) {
+      return withCors(await handleDeleteSession(env, sessionMatch[1]))
     }
 
     return withCors(

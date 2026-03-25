@@ -1,4 +1,6 @@
 import type {
+  DeleteSessionRequest,
+  DeleteSessionResponse,
   EndSessionRequest,
   EndSessionResponse,
   GetHistoryResponse,
@@ -21,6 +23,18 @@ async function postJson<TResponse>(path: string, body: object): Promise<TRespons
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    throw new Error(`Request failed with status ${response.status}`)
+  }
+
+  return (await response.json()) as TResponse
+}
+
+async function deleteJson<TResponse>(path: string): Promise<TResponse> {
+  const response = await fetch(buildApiUrl(path), {
+    method: 'DELETE',
   })
 
   if (!response.ok) {
@@ -80,5 +94,8 @@ export const httpInterviewApi = {
   },
   endSession(payload: EndSessionRequest) {
     return postJson<EndSessionResponse>(`/api/sessions/${payload.sessionId}/end`, payload)
+  },
+  deleteSession(payload: DeleteSessionRequest) {
+    return deleteJson<DeleteSessionResponse>(`/api/sessions/${payload.sessionId}`)
   },
 }

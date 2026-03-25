@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import type { GetReportResponse, InterviewReport } from '../../shared/types'
 import { interviewApi } from '../services/interviewApi'
+import { deleteInterviewSession } from './sessionSlice'
 
 type ReportState = {
   current: InterviewReport | null
@@ -69,6 +70,14 @@ const reportSlice = createSlice({
         state.status = 'failed'
         state.currentSessionId = action.meta.arg
         state.error = action.payload ?? 'Unable to load the report.'
+      })
+      .addCase(deleteInterviewSession.fulfilled, (state, action) => {
+        if (state.currentSessionId === action.payload.sessionId) {
+          state.current = null
+          state.currentSessionId = null
+          state.status = 'idle'
+          state.error = null
+        }
       })
   },
 })

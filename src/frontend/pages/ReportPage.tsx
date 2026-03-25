@@ -1,20 +1,44 @@
 import { useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../hooks/redux'
 import { loadInterviewReport } from '../slices/reportSlice'
+import { deleteInterviewSession } from '../slices/sessionSlice'
 
 export function ReportPage() {
   const { sessionId } = useParams()
+  const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const report = useAppSelector((state) => state.report.current)
   const status = useAppSelector((state) => state.report.status)
   const error = useAppSelector((state) => state.report.error)
+  const deleteStatus = useAppSelector((state) => state.session.deleteStatus)
+  const deleteSessionId = useAppSelector((state) => state.session.deleteSessionId)
+  const deleteError = useAppSelector((state) => state.session.deleteError)
 
   useEffect(() => {
     if (sessionId) {
       void dispatch(loadInterviewReport(sessionId))
     }
   }, [dispatch, sessionId])
+
+  const handleDelete = async () => {
+    if (!sessionId) {
+      return
+    }
+
+    const confirmed = window.confirm(
+      'Delete this saved interview session? This also removes its report and feedback history.',
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    const result = await dispatch(deleteInterviewSession({ sessionId }))
+    if (deleteInterviewSession.fulfilled.match(result)) {
+      navigate('/history')
+    }
+  }
 
   return (
     <section className="stack-lg">
@@ -23,9 +47,18 @@ export function ReportPage() {
           <p className="eyebrow">Final report</p>
           <h2>{report?.role ?? 'Session report'}</h2>
         </div>
-        <Link className="text-link" to="/history">
-          Back to history
-        </Link>
+        <div className="actions">
+          <Link className="text-link" to="/history">
+            Back to history
+          </Link>
+          <button
+            className="button button-secondary"
+            onClick={() => void handleDelete()}
+            disabled={!sessionId || deleteStatus === 'loading'}
+          >
+            {deleteStatus === 'loading' && deleteSessionId === sessionId ? 'Deleting...' : 'Delete'}
+          </button>
+        </div>
       </div>
 
       {status === 'loading' ? (
@@ -36,6 +69,7 @@ export function ReportPage() {
       ) : null}
 
       {error ? <p className="error-text">{error}</p> : null}
+      {deleteError ? <p className="error-text">{deleteError}</p> : null}
 
       {!report && status !== 'loading' ? (
         <section className="panel stack-sm">

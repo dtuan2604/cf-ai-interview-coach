@@ -10,5 +10,7 @@ export const workerRoutes: WorkerRoute[] = [
   { method: 'GET', path: '/api/sessions/:sessionId' },
   { method: 'POST', path: '/api/sessions/start' },
   { method: 'POST', path: '/api/sessions/:sessionId/answer' },
+  { method: 'POST', path: '/api/sessions/:sessionId/voice-turn' },
   { method: 'POST', path: '/api/sessions/:sessionId/end' },
+  { method: 'DELETE', path: '/api/sessions/:sessionId' },
 ]

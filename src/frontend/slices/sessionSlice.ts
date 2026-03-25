@@ -5,6 +5,8 @@ import {
 } from '@reduxjs/toolkit'
 import type {
   ApiTransport,
+  DeleteSessionRequest,
+  DeleteSessionResponse,
   EndSessionRequest,
   EndSessionResponse,
   GetSessionResponse,
@@ -29,6 +31,9 @@ type SessionState = {
   answerStatus: RequestState
   voiceStatus: RequestState
   endStatus: RequestState
+  deleteStatus: RequestState
+  deleteSessionId: string | null
+  deleteError: string | null
   error: string | null
 }
 
@@ -40,6 +45,9 @@ const initialState: SessionState = {
   answerStatus: 'idle',
   voiceStatus: 'idle',
   endStatus: 'idle',
+  deleteStatus: 'idle',
+  deleteSessionId: null,
+  deleteError: null,
   error: null,
 }
 
@@ -107,12 +115,25 @@ export const submitInterviewVoiceTurn = createAsyncThunk<
   }
 })
 
+export const deleteInterviewSession = createAsyncThunk<
+  DeleteSessionResponse,
+  DeleteSessionRequest,
+  { rejectValue: string }
+>('session/deleteInterviewSession', async (payload, thunkApi) => {
+  try {
+    return await interviewApi.deleteSession(payload)
+  } catch (error) {
+    return thunkApi.rejectWithValue(toErrorMessage(error))
+  }
+})
+
 const sessionSlice = createSlice({
   name: 'session',
   initialState,
   reducers: {
     clearSessionError: (state) => {
       state.error = null
+      state.deleteError = null
     },
     hydrateSessionFromHistory: (state, action: PayloadAction<InterviewSessionState | null>) => {
       state.current = action.payload
@@ -184,6 +205,22 @@ const sessionSlice = createSlice({
       .addCase(endInterviewSession.rejected, (state, action) => {
         state.endStatus = 'failed'
         state.error = action.payload ?? 'Unable to end the session.'
+      })
+      .addCase(deleteInterviewSession.pending, (state, action) => {
+        state.deleteStatus = 'loading'
+        state.deleteSessionId = action.meta.arg.sessionId
+        state.deleteError = null
+      })
+      .addCase(deleteInterviewSession.fulfilled, (state, action) => {
+        state.deleteStatus = 'idle'
+        state.deleteSessionId = action.payload.sessionId
+        if (state.current?.id === action.payload.sessionId) {
+          state.current = null
+        }
+      })
+      .addCase(deleteInterviewSession.rejected, (state, action) => {
+        state.deleteStatus = 'failed'
+        state.deleteError = action.payload ?? 'Unable to delete the session.'
       })
   },
 })

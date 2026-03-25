@@ -214,6 +214,12 @@ export async function upsertReport(db: D1DatabaseLike, report: InterviewReport) 
   ).run()
 }
 
+export async function deleteSessionRecords(db: D1DatabaseLike, sessionId: string) {
+  await db.prepare('DELETE FROM interview_reports WHERE session_id = ?').bind(sessionId).run()
+  await db.prepare('DELETE FROM interview_feedback WHERE session_id = ?').bind(sessionId).run()
+  await db.prepare('DELETE FROM interview_sessions WHERE id = ?').bind(sessionId).run()
+}
+
 export async function listHistory(db: D1DatabaseLike): Promise<HistorySessionSummary[]> {
   const rows = await db.prepare(
     `SELECT id, role, interview_type, difficulty, mode, status, overall_score,

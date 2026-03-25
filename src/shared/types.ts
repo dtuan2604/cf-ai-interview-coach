@@ -121,6 +121,16 @@ export type EndSessionResponse = {
   transport: ApiTransport
 }
 
+export type DeleteSessionRequest = {
+  sessionId: string
+}
+
+export type DeleteSessionResponse = {
+  ok: true
+  sessionId: string
+  transport: ApiTransport
+}
+
 export type GetHistoryResponse = {
   items: HistorySessionSummary[]
   transport: ApiTransport

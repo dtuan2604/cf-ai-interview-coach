@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import type { GetHistoryResponse, HistorySessionSummary } from '../../shared/types'
 import { interviewApi } from '../services/interviewApi'
-import { endInterviewSession } from './sessionSlice'
+import { deleteInterviewSession, endInterviewSession } from './sessionSlice'
 
 type HistoryState = {
   items: HistorySessionSummary[]
@@ -68,6 +68,9 @@ const historySlice = createSlice({
         }
 
         state.items.unshift(action.payload.historyEntry)
+      })
+      .addCase(deleteInterviewSession.fulfilled, (state, action) => {
+        state.items = state.items.filter((item) => item.id !== action.payload.sessionId)
       })
   },
 })

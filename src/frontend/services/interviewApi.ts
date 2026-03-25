@@ -1,4 +1,6 @@
 import type {
+  DeleteSessionRequest,
+  DeleteSessionResponse,
   EndSessionRequest,
   EndSessionResponse,
   GetHistoryResponse,
@@ -25,6 +27,7 @@ export type InterviewApi = {
   submitAnswer: (payload: SubmitAnswerRequest) => Promise<SubmitAnswerResponse>
   submitVoiceTurn: (payload: SubmitVoiceTurnRequest) => Promise<SubmitVoiceTurnResponse>
   endSession: (payload: EndSessionRequest) => Promise<EndSessionResponse>
+  deleteSession: (payload: DeleteSessionRequest) => Promise<DeleteSessionResponse>
 }
 
 export const interviewApi: InterviewApi =
