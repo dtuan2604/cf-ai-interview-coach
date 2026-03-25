@@ -2,6 +2,9 @@
 
 Cloudflare-based AI Interview Coach built with a text-first experience and an optional turn-based voice path. The product is intentionally shaped as a guided interview workflow rather than a generic chatbot.
 
+- Production Link: [AI Interview Coach](https://cf-ai-interview-coach.tysonhoanglearning.workers.dev/)
+- List of future improvement is included under [docs/improvements.md](docs/improvements.md)
+
 ## Product Scope
 
 - Primary MVP path: structured text interview sessions
