@@ -4,14 +4,10 @@
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-03-23",
   "vars": {
-    "APP_ENV": "local",
     "AI_RUNTIME_MODE": "mock",
     "AI_INTERVIEW_MODEL": "REPLACE_WITH_WORKERS_AI_CHAT_MODEL",
     "AI_EVALUATION_MODEL": "REPLACE_WITH_WORKERS_AI_EVALUATION_MODEL",
-    "AI_REPORT_MODEL": "REPLACE_WITH_WORKERS_AI_REPORT_MODEL",
-    "AI_TRANSCRIPTION_MODEL": "REPLACE_WITH_WORKERS_AI_STT_MODEL",
-    "SESSION_SUMMARY_MAX_TOKENS": "1200",
-    "REPORT_MAX_TOKENS": "2200"
+    "AI_REPORT_MODEL": "REPLACE_WITH_WORKERS_AI_REPORT_MODEL"
   },
   "ai": {
     "binding": "AI"
@@ -28,8 +24,8 @@
     {
       "binding": "DB",
       "database_name": "interview-coach-db",
-      "database_id": "f71c65b3-3f42-4d82-9b98-e4e57c89e4cb",
-      "preview_database_id": "f71c65b3-3f42-4d82-9b98-e4e57c89e4cb"
+      "database_id": "REPLACE_WITH_PRODUCTION_D1_DATABASE_ID",
+      "preview_database_id": "REPLACE_WITH_PREVIEW_D1_DATABASE_ID"
     }
   ],
   "migrations": [

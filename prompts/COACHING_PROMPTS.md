@@ -1,6 +1,6 @@
 # Coaching Prompts
 
-This document defines the prompt strategy for the AI Interview Coach. Step 1 adds the prompt contracts and control strategy before Workers AI is wired into the runtime.
+This document defines the prompt strategy for the AI Interview Coach as it exists in the current Worker implementation.
 
 ## Prompt Goals
 
@@ -17,7 +17,6 @@ The Worker will read the following environment variables at runtime:
 - `AI_INTERVIEW_MODEL`: model used to generate the next interview question and adjust coaching direction.
 - `AI_EVALUATION_MODEL`: model used to score and critique each answer.
 - `AI_REPORT_MODEL`: model used to generate the final post-session report.
-- `AI_TRANSCRIPTION_MODEL`: optional speech-to-text model for a later server-side voice upgrade.
 
 The application code should support fallbacks such as:
 
@@ -109,25 +108,22 @@ Return JSON with:
 
 ## Memory Injection Strategy
 
-- Durable Object holds the ordered live session state, recent transcript, question index, live scoring, and rolling summary memory.
-- Prompt context should include:
-- the latest summary memory
-- the last 4-8 turns
-- the current question metadata
-- the latest evaluation highlights
-- Earlier turns should be condensed into a summary string before prompt size becomes unstable.
+- Durable Object holds the ordered live session state, recent transcript, question index, and latest evaluation.
+- Prompt context should include the last 6 turns.
+- Prompt context should include the current question metadata.
+- Prompt context should include the latest evaluation highlights.
+- The current implementation does not yet maintain a rolling summary string.
 
 ## Prompt Size Control
 
-- Keep a rolling summary in the Durable Object.
 - Include only recent turns verbatim.
-- Persist full transcript and structured evaluations to D1 at checkpoints or session end.
-- Use token caps from environment configuration such as `SESSION_SUMMARY_MAX_TOKENS` and `REPORT_MAX_TOKENS`.
+- Persist structured session metadata, per-answer evaluations, and the final report to D1.
+- Keep the full transcript in Durable Object storage for the live session.
 
-## Notes For Later Steps
+## Current Runtime Notes
 
 - Evaluation and report prompts should request JSON to keep Worker parsing deterministic.
 - Voice mode should reuse the same evaluation and next-question prompts after transcription.
-- The current MVP runs voice in the browser: the AI speaks the latest interviewer response aloud, browser speech recognition captures the user's answer, and the app waits about 6 seconds of silence before submitting the turn through the same Worker session flow as text input.
+- The current MVP runs voice in the browser: the AI speaks the latest interviewer response aloud, browser speech recognition captures the user's answer, and the app waits about 4 seconds of silence before submitting the turn through the same Worker session flow as text input.
 - Prompt builders belong in a shared Worker-side `prompts/` module and should be unit tested.
 - Final report generation should use D1 session and evaluation records as the primary source rather than live Durable Object state.

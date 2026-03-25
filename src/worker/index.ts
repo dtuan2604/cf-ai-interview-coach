@@ -31,10 +31,7 @@ export type WorkerEnv = {
   AI_INTERVIEW_MODEL?: string
   AI_EVALUATION_MODEL?: string
   AI_REPORT_MODEL?: string
-  AI_TRANSCRIPTION_MODEL?: string
   AI_RUNTIME_MODE?: string
-  SESSION_SUMMARY_MAX_TOKENS?: string
-  REPORT_MAX_TOKENS?: string
 }
 
 export default {

@@ -43,6 +43,7 @@ Current scaffold status:
 - Workers AI adapter path with configuration-driven runtime mode
 - Final report generation from D1-backed session and evaluation records
 - Conversational voice mode with browser speech capture, silence-based turn detection, and shared Worker session processing
+- Saved-session deletion from history and report views, with Durable Object cleanup before D1 cleanup
 - setup documentation and prompt strategy docs
 
 Durable Object-backed session state, D1-backed history/report metadata, Workers AI adapter paths, inline final report generation, and conversational voice mode are now in place.
@@ -72,7 +73,7 @@ migrations/
 prompts/
 ```
 
-## Local Development
+## Run Locally
 
 1. Install dependencies:
 
@@ -80,26 +81,51 @@ prompts/
 npm install
 ```
 
-2. Start the Worker:
+2. Create local env files from the checked-in examples:
+
+```bash
+cp .env.example .env
+cp .dev.vars.example .dev.vars
+cp wrangler.example.jsonc wrangler.jsonc
+```
+
+3. Keep the frontend on Worker transport in `.env`:
+
+```dotenv
+VITE_APP_TITLE=AI Interview Coach
+VITE_API_TRANSPORT=worker
+VITE_API_BASE_URL=/
+```
+
+4. If you want real Workers AI locally, update `.dev.vars` and set `AI_RUNTIME_MODE=workers`. Otherwise leave it as `mock` for local development.
+
+5. Fill the local `wrangler.jsonc` placeholders before running the Worker:
+
+- set `database_id`
+- set `preview_database_id`
+- keep `AI_RUNTIME_MODE=mock` in the config unless you want local Workers AI calls
+
+6. Start the Worker in one terminal:
 
 ```bash
 npm run dev:worker
 ```
 
-3. Start the frontend:
+7. Start the frontend in another terminal:
 
 ```bash
 npm run dev
 ```
 
-4. Open the local Vite URL and verify:
+8. Open the local Vite URL and verify:
 
 - landing page renders
 - setup page updates interview preferences
 - interview session route opens through the Worker
 - report and history pages render
+- saved sessions can be deleted from history and report pages
 
-5. Run the full local verification bundle when needed:
+9. Run the full local verification bundle when needed:
 
 ```bash
 npm run verify
@@ -114,48 +140,105 @@ Frontend:
 - `VITE_APP_TITLE`
 - `VITE_API_TRANSPORT`
 - `VITE_API_BASE_URL`
-- `VITE_DEFAULT_MODEL_LABEL`
 
 Worker runtime:
 
-- `APP_ENV`
+- `AI_RUNTIME_MODE`
 - `AI_INTERVIEW_MODEL`
 - `AI_EVALUATION_MODEL`
 - `AI_REPORT_MODEL`
-- `AI_TRANSCRIPTION_MODEL`
-- `SESSION_SUMMARY_MAX_TOKENS`
-- `REPORT_MAX_TOKENS`
 
-Model IDs are intentionally configuration-driven so the LLM choice is swappable without code changes.
-`AI_TRANSCRIPTION_MODEL` is reserved for a later server-side transcription upgrade; the current MVP voice path uses browser speech recognition, browser speech synthesis, a 6-second silence window, and a manual transcript fallback.
+The checked-in example files `.env.example` and `.dev.vars.example` only include variables that are actively used by the current codebase.
+
+Model IDs are intentionally configuration-driven so the LLM choice is swappable without code changes. The current MVP voice path uses browser speech recognition, browser speech synthesis, a 4-second silence window, and a manual transcript fallback.
 
 The frontend transport is also configuration-driven:
 
 - `VITE_API_TRANSPORT=worker` is now the recommended local path for development.
 - `VITE_API_TRANSPORT=mock` remains available as a fallback if you want to bypass the Worker temporarily.
 
-## Local Development With Worker Transport
+The Vite dev server proxies `/api` requests to the local Worker on `http://127.0.0.1:8787`.
 
-Run the frontend and Worker in separate terminals:
+## Deploy To Cloudflare Production
+
+1. Authenticate Wrangler:
 
 ```bash
-npm run dev:worker
-npm run dev
+npx wrangler login
 ```
 
-The Vite dev server proxies `/api` requests to the local Worker on `http://127.0.0.1:8787`.
-The Worker dev server is pinned to port `8787` so the frontend does not accidentally proxy to an older Wrangler instance on another port.
+2. Create the production D1 database if you do not already have one:
 
-## Planned Wrangler Bindings
+```bash
+npx wrangler d1 create interview-coach-db
+```
+
+3. Copy `wrangler.example.jsonc` to an untracked local `wrangler.jsonc` and fill in the production `database_id` values:
+
+```bash
+cp wrangler.example.jsonc wrangler.jsonc
+```
+
+4. Apply the remote D1 migrations:
+
+```bash
+npx wrangler d1 migrations apply interview-coach-db --remote
+```
+
+5. Set production Worker variables in your local `wrangler.jsonc` or your deployment pipeline:
+
+```text
+AI_RUNTIME_MODE=workers
+AI_INTERVIEW_MODEL=<your Workers AI model>
+AI_EVALUATION_MODEL=<your Workers AI model>
+AI_REPORT_MODEL=<your Workers AI model>
+```
+
+6. Deploy the Worker:
+
+```bash
+npx wrangler deploy
+```
+
+7. Create a Cloudflare Pages project for this repo and use:
+
+```text
+Build command: npm run build
+Output directory: dist
+```
+
+8. Set Pages production environment variables:
+
+```text
+VITE_APP_TITLE=AI Interview Coach
+VITE_API_TRANSPORT=worker
+VITE_API_BASE_URL=https://<your-worker-domain>/
+```
+
+9. Trigger the Pages production deployment from the dashboard or by pushing to the production branch.
+
+10. Smoke test production:
+
+- start and finish a text session
+- run a voice session
+- open the generated report
+- delete a completed session from history
+- delete a completed session from the report page
+
+## Worker Bindings
 
 ```toml
+[vars]
+AI_RUNTIME_MODE = "mock"
+
 [ai]
 binding = "AI"
 
 [[d1_databases]]
 binding = "DB"
-database_name = "cf-ai-interview-coach"
+database_name = "interview-coach-db"
 database_id = "REPLACE_WITH_D1_DATABASE_ID"
+preview_database_id = "REPLACE_WITH_PREVIEW_D1_DATABASE_ID"
 
 [[durable_objects.bindings]]
 name = "INTERVIEW_SESSIONS"
@@ -173,6 +256,7 @@ See [docs/cloudflare-setup.md](docs/cloudflare-setup.md) for the concrete checkl
 - Pages project creation
 - Workers AI enablement
 - environment variable and secret configuration
+- untracked Wrangler config setup from `wrangler.example.jsonc`
 
 ## Testing And Schema Docs
 

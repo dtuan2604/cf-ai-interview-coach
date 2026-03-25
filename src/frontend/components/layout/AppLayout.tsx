@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { appConfig } from '../../services/config'
 
@@ -8,6 +9,10 @@ const navItems = [
 ]
 
 export function AppLayout() {
+  useEffect(() => {
+    document.title = appConfig.title
+  }, [])
+
   return (
     <div className="app-shell">
       <header className="topbar">

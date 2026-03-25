@@ -24,12 +24,15 @@ Run these checks before pushing a larger change:
 4. Run a text interview end to end and confirm the report page loads.
 5. Run a voice interview end to end and confirm:
    - the AI speaks the opening prompt
-   - speech capture waits roughly 6 seconds after silence
+   - speech capture waits roughly 4 seconds after silence
    - the final answer auto-redirects to the report page
 6. Refresh an active interview route and confirm the Durable Object restores the session.
+7. Delete a completed session from history and confirm the card disappears.
+8. Open a report page, delete the same session from the report view, and confirm you are redirected back to history.
 
 ## Residual Gaps
 
 - Browser speech-recognition behavior is still primarily a manual test concern because it depends on browser permissions and implementation differences.
 - Workers AI output quality remains probabilistic, so fallback behavior should be checked whenever prompts or model settings change.
 - Frontend Redux slices are still best covered with a browser-oriented test runner if we later decide the repo should absorb that additional tooling.
+- The delete flow does not yet have dedicated automated coverage for the Worker + D1 + Durable Object integration path.

@@ -12,6 +12,7 @@ Stores session-level metadata:
 - current and final session status
 - latest summary and overall score snapshot
 - timestamps for start, end, create, and update
+- no full transcript payload; the live transcript stays in the Durable Object
 
 ### `interview_feedback`
 
@@ -39,3 +40,12 @@ Stores the persisted final report:
 - D1: persistent records for history pages, report pages, and future analytics
 
 That separation is intentional and matches the architecture described in the assignment.
+
+## Delete Behavior
+
+Deleting a saved session is a cross-store operation:
+
+1. Clear the Durable Object session state so the live session can no longer be restored.
+2. Delete the matching `interview_reports`, `interview_feedback`, and `interview_sessions` rows from D1.
+
+That ordering prevents a stale live session from surviving after its long-term records are removed.
